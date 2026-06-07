@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web Clone & Criptografia E2EE</title>
+    <!-- Tailwind CSS para estilização rápida e moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome para ícones idênticos aos do WhatsApp -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SDK do Firebase (Compat) para conexão real opcional -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Biblioteca CryptoJS para Criptografia AES de Ponta a Ponta -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        wa: {
+                            bg: '#0b141a',
+                            panel: '#111b21',
+                            header: '#202c33',
+                            incoming: '#202c33',
+                            outgoing: '#005c4b',
+                            teal: '#00a884',
+                            textMuted: '#8696a0',
+                            textActive: '#e9edef',
+                            inputBg: '#2a3942',
+                            border: '#222d34'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Segoe UI"', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilização personalizada para barra de rolagem fina */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374248;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f5d64;
+        }
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#0c1317] text-wa-textActive h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4">
+
+    <!-- Container Principal do App -->
+    <div class="w-full h-full max-w-[1600px] md:h-[95vh] bg-wa-bg rounded-none md:rounded-lg shadow-2xl border border-wa-border flex overflow-hidden">
+        
+        <!-- BARRA LATERAL ESQUERDA (Lista de Contatos e Perfil) -->
+        <aside class="w-full md:w-[30%] min-w-[340px] border-r border-wa-border flex flex-col h-full bg-wa-panel" id="sidebar">
+            
+            <!-- Header do Usuário -->
+            <header class="h-[60px] bg-wa-header px-4 py-2 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=user" alt="Avatar" class="w-10 h-10 rounded-full bg-wa-inputBg p-1 border border-wa-teal">
+                    <div>
+                        <h3 class="font-semibold text-sm leading-tight" id="profile-name">Seu Nome</h3>
+                        <span class="text-xs text-wa-teal flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-wa-teal inline-block animate-pulse"></span> Online
+                        </span>
+                    </div>
+                </div>
+                <!-- Ações do Header -->
+                <div class="flex items-center gap-4 text-wa-textMuted">
+                    <button onclick="toggleKeyModal()" title="Chave de Criptografia" class="text-amber-500 hover:text-amber-400 transition-colors flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-full text-xs font-semibold">
+                        <i class="fa-solid fa-key"></i> E2EE
+                    </button>
+                    <button onclick="toggleSetupModal()" title="Configurações Firebase" class="hover:text-wa-teal transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                    </button>
+                    <button onclick="openEditProfile()" title="Editar Perfil" class="hover:text-wa-teal transition-colors">
+                        <i class="fa-solid fa-user-pen text-lg"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Alerta de Sincronização Local (Multi-Abas) e Criptografia -->
+            <div class="bg-[#182229] px-4 py-3 flex items-center gap-3 border-b border-wa-border">
+                <div class="bg-amber-500 text-wa-panel rounded-full p-2 flex items-center justify-center w-9 h-9 shrink-0">
+                    <i class="fa-solid fa-user-shield text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-semibold text-wa-textActive">Segurança Ativada</h4>
+                    <p class="text-[10px] text-wa-textMuted leading-tight">As mensagens são criptografadas no navegador com AES antes do envio.</p>
+                </div>
+            </div>
+
+            <!-- Pesquisa de Chats -->
+            <div class="p-2 shrink-0 border-b border-wa-border bg-wa-panel">
+                <div class="bg-wa-inputBg flex items-center rounded-lg px-3 py-1.5 gap-3">
+                    <i class="fa-solid fa-magnifying-glass text-wa-textMuted text-xs"></i>
+                    <input type="text" id="search-chat" placeholder="Pesquisar ou começar uma nova conversa" class="bg-transparent border-none outline-none text-sm text-wa-textActive placeholder-wa-textMuted w-full">
+                </div>
+            </div>
+
+            <!-- Lista de Conversas -->
+            <div class="flex-grow overflow-y-auto" id="chat-list">
+                <!-- Chat 1: Assistente Firebase (Bot) -->
+                <div onclick="selectChat('bot')" id="chat-item-bot" class="flex items-center gap-3 px-4 py-3 hover:bg-wa-header cursor-pointer transition-colors border-b border-wa-border bg-wa-header">
+                    <div class="relative">
+                        <img src="https://api.dicebear.com/7.x/identicon/svg?seed=firebase" class="w-12 h-12 rounded-full bg-[#1a2b36] p-1" alt="Firebase Logo">
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-wa-teal rounded-full border-2 border-wa-panel"></span>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <h3 class="font-semibold text-sm truncate text-wa-textActive">Assistente Firebase</h3>
+                            <span class="text-xs text-wa-textMuted" id="bot-last-time">Agora</span>
+                        </div>
+                        <p class="text-xs text-wa-textMuted truncate" id="bot-last-msg">Olá! Me pergunte como o Firebase guarda os dados encriptados.</p>
+                    </div>
+                </div>
+
+                <!-- Chat 2: Chat Global Sincronizado (Multi-abas ou Firebase) -->
+                <div onclick="selectChat('global')" id="chat-item-global" class="flex items-center gap-3 px-4 py-3 hover:bg-wa-header cursor-pointer transition-colors border-b border-wa-border">
+                    <div class="relative">
+                        <div class="w-12 h-12 rounded-full bg-[#005c4b] flex items-center justify-center text-white font-bold text-lg">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-wa-teal rounded-full border-2 border-wa-panel"></span>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <h3 class="font-semibold text-sm truncate text-wa-textActive">Chat Global (Realtime)</h3>
+                            <span class="text-xs text-wa-textMuted" id="global-last-time">--:--</span>
+                        </div>
+                        <p class="text-xs text-wa-textMuted truncate" id="global-last-msg">Envie mensagens criptografadas para a nuvem.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ÁREA DA CONVERSA DIREITA -->
+        <main class="hidden md:flex flex-col flex-grow h-full bg-[#0b141a] relative" id="chat-area">
+            
+            <!-- Tela de Boas-Vindas Padrão (Sem Chat Selecionado) -->
+            <div id="welcome-screen" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-[#222e35] z-10">
+                <div class="max-w-md flex flex-col items-center">
+                    <div class="w-24 h-24 rounded-full bg-[#2a3942] flex items-center justify-center text-wa-teal mb-6 text-4xl">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <h1 class="text-2xl font-light text-wa-textActive mb-3">WhatsApp Web Clone + E2EE</h1>
+                    <p class="text-sm text-wa-textMuted leading-relaxed mb-6">
+                        Com criptografia ativa de ponta a ponta. Suas mensagens são protegidas por chaves matemáticas antes de saírem do seu navegador.
+                    </p>
+                    <button onclick="selectChat('bot')" class="bg-wa-teal hover:bg-[#008f70] text-wa-panel font-semibold px-5 py-2.5 rounded-full transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-comments"></i> Iniciar Chat Protegido
+                    </button>
+                    <div class="mt-8 pt-6 border-t border-wa-border w-full flex items-center justify-center gap-2 text-xs text-amber-500 font-semibold">
+                        <i class="fa-solid fa-lock"></i> Criptografia de ponta a ponta AES ativa
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header do Chat Selecionado -->
+            <header class="h-[60px] bg-wa-header px-4 py-2 flex items-center justify-between border-b border-wa-border shrink-0 z-0">
+                <div class="flex items-center gap-3">
+                    <button class="md:hidden text-wa-textMuted hover:text-wa-textActive" onclick="backToSidebar()">
+                        <i class="fa-solid fa-arrow-left text-lg"></i>
+                    </button>
+                    <img id="active-chat-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=firebase" alt="Avatar Ativo" class="w-10 h-10 rounded-full bg-wa-inputBg">
+                    <div>
+                        <h3 class="font-semibold text-sm leading-tight" id="active-chat-name">Assistente Firebase</h3>
+                        <span class="text-xs text-amber-500 flex items-center gap-1" id="active-chat-status">
+                            <i class="fa-solid fa-shield-halved"></i> Criptografado
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6 text-wa-textMuted">
+                    <button onclick="toggleKeyModal()" class="text-amber-500 hover:text-amber-400 flex items-center gap-1 text-xs">
+                        <i class="fa-solid fa-key"></i> Ver Chave Ativa
+                    </button>
+                    <button onclick="toggleSetupModal()" title="Tutorial e Deploy Firebase" class="hover:text-wa-teal">
+                        <i class="fa-solid fa-circle-question text-lg"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Área de Mensagens (Scrollable) -->
+            <div class="flex-grow overflow-y-auto p-6 space-y-4 bg-cover bg-center" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a;" id="messages-container">
+                <!-- Mensagens carregadas dinamicamente via JS -->
+            </div>
+
+            <!-- Campo de Input / Envio de Mensagem -->
+            <footer class="h-[62px] bg-wa-header px-4 py-2 flex items-center gap-3 shrink-0">
+                <div class="flex items-center text-wa-textMuted gap-4">
+                    <button class="hover:text-wa-textActive transition-colors"><i class="fa-regular fa-face-smile text-xl"></i></button>
+                    <button class="hover:text-wa-textActive transition-colors" title="Como funciona a criptografia?" onclick="alert('Como as mensagens são encriptadas no navegador, o Firebase só consegue ver códigos embaralhados!')"><i class="fa-solid fa-lock text-xl text-amber-500"></i></button>
+                </div>
+                <div class="flex-grow bg-wa-inputBg rounded-lg py-2 px-4">
+                    <input type="text" id="msg-input" placeholder="Digite uma mensagem criptografada" class="bg-transparent border-none outline-none text-sm text-wa-textActive placeholder-wa-textMuted w-full" onkeydown="handleInputKeydown(event)">
+                </div>
+                <div>
+                    <button onclick="sendMessage()" id="send-btn" class="bg-wa-teal text-wa-panel hover:scale-105 active:scale-95 transition-transform rounded-full w-10 h-10 flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane text-sm pl-0.5"></i>
+                    </button>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- MODAL DE CONFIGURAÇÃO DA CHAVE SECRETA DE CRIPTOGRAFIA -->
+    <div id="key-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-wa-panel border border-wa-border rounded-xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl">
+            <header class="bg-wa-header p-4 border-b border-wa-border flex justify-between items-center">
+                <h2 class="text-sm font-bold text-amber-500 flex items-center gap-2">
+                    <i class="fa-solid fa-key"></i> Chave Secreta de Criptografia (E2EE)
+                </h2>
+                <button onclick="toggleKeyModal()" class="text-wa-textMuted hover:text-wa-textActive"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-wa-textMuted leading-relaxed">
+                    Defina uma palavra-passe (senha) secreta. Todas as mensagens serão criptografadas usando esta senha. 
+                    <strong>Apenas as pessoas que tiverem exatamente a mesma chave conseguirão ler o chat!</strong>
+                </p>
+                <div>
+                    <label class="text-xs text-wa-textMuted block mb-1">Chave do Chat Atual</label>
+                    <input type="text" id="input-crypto-key" class="w-full bg-wa-inputBg border border-wa-border rounded p-2.5 text-sm text-amber-500 font-mono outline-none focus:border-amber-500" placeholder="Ex: minha-senha-super-secreta" value="senha123">
+                </div>
+                
+                <div class="p-3 bg-wa-bg rounded border border-wa-border">
+                    <h4 class="text-[10px] uppercase tracking-wider font-semibold text-wa-textMuted mb-1">Demonstração visual do que a Google/Firebase lê:</h4>
+                    <p class="text-[11px] font-mono text-red-400 break-all" id="encrypted-sample">U2FsdGVkX1+z7KzZ9E9vR3d...</p>
+                </div>
+
+                <button onclick="saveCryptoKey()" class="w-full bg-amber-500 hover:bg-amber-600 text-wa-panel font-bold text-sm py-2 rounded transition-colors uppercase">
+                    Salvar e Aplicar Chave
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURAÇÃO / INSTALAÇÃO DO FIREBASE -->
+    <div id="setup-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-wa-panel border border-wa-border rounded-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            <!-- Header Modal -->
+            <header class="bg-wa-header p-4 border-b border-wa-border flex justify-between items-center">
+                <h2 class="text-lg font-bold text-wa-teal flex items-center gap-2">
+                    <i class="fa-solid fa-fire"></i> Conectar com o Google Firebase
+                </h2>
+                <button onclick="toggleSetupModal()" class="text-wa-textMuted hover:text-wa-textActive text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            
+            <!-- Conteúdo Modal -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Seção 1: O que é? -->
+                <div>
+                    <h3 class="text-sm font-semibold text-wa-textActive mb-2">1. Como funciona a Criptografia + Firebase?</h3>
+                    <p class="text-xs text-wa-textMuted leading-relaxed">
+                        Mesmo conectando o banco de dados Firebase na nuvem, <span class="text-amber-500 font-semibold">suas conversas estão seguras</span>. Como o algoritmo de criptografia AES roda localmente no navegador, os pacotes que viajam pela internet já estão codificados. Se você ou alguém olhar no console do Firebase Firestore, verá apenas sequências incompreensíveis de letras e números.
+                    </p>
+                </div>
+
+                <!-- Seção 2: Credenciais do Firebase -->
+                <div class="bg-wa-header p-4 rounded-lg border border-wa-border space-y-3">
+                    <h3 class="text-sm font-semibold text-wa-textActive">2. Configuração do Cloud Firestore</h3>
+                    <p class="text-[11px] text-wa-textMuted">Insira o objeto JavaScript gerado nas configurações do seu projeto do Firebase console:</p>
+                    <textarea id="firebase-config-input" rows="6" class="w-full bg-wa-bg border border-wa-border rounded p-2.5 font-mono text-xs text-wa-teal placeholder-gray-600 outline-none focus:border-wa-teal" placeholder='{
+  "apiKey": "SUA_API_KEY",
+  "authDomain": "SEU_DOMINIO.firebaseapp.com",
+  "projectId": "SEU_PROJETO_ID",
+  "storageBucket": "SEU_BUCKET.appspot.com",
+  "messagingSenderId": "SEU_SENDER_ID",
+  "appId": "SEU_APP_ID"
+}'></textarea>
+                    <button onclick="saveFirebaseConfig()" class="w-full bg-wa-teal hover:bg-[#008f70] text-wa-panel font-bold text-xs py-2 rounded transition-colors uppercase">
+                        Aplicar e Reiniciar Aplicativo
+                    </button>
+                </div>
+
+                <!-- Seção 3: Tutorial de Deploy no Firebase Hosting -->
+                <div class="space-y-2">
+                    <h3 class="text-sm font-semibold text-wa-textActive">3. Como hospedar este App de graça no Firebase Hosting?</h3>
+                    <ol class="text-xs text-wa-textMuted list-decimal list-inside space-y-1">
+                        <li>Crie uma conta gratuita no <a href="https://console.firebase.google.com" target="_blank" class="text-wa-teal hover:underline">Firebase Console</a> e crie um novo projeto.</li>
+                        <li>No seu painel, ative o banco de dados <strong class="text-wa-textActive">Cloud Firestore</strong> em modo de teste.</li>
+                        <li>Instale o Firebase CLI no seu terminal: <code class="bg-wa-bg px-1 py-0.5 rounded text-red-400">npm install -g firebase-tools</code>.</li>
+                        <li>Na pasta onde salvou este arquivo HTML (renomeie-o para <code class="bg-wa-bg px-1.5 py-0.5 text-wa-textActive rounded font-mono">index.html</code>), rode: <code class="bg-wa-bg px-1 py-0.5 rounded text-red-400">firebase login</code> e depois <code class="bg-wa-bg px-1 py-0.5 rounded text-red-400">firebase init</code>.</li>
+                        <li>Selecione a opção <strong class="text-wa-textActive">Hosting</strong>, defina a sua pasta atual como pública e confirme o projeto.</li>
+                        <li>Para publicar seu WhatsApp clone na internet global, use: <code class="bg-wa-bg px-1.5 py-1 text-wa-teal rounded font-mono font-bold">firebase deploy</code>! O terminal gerará o link da sua hospedagem.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE PERFIL -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="bg-wa-panel border border-wa-border rounded-xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl">
+            <header class="bg-wa-header p-4 border-b border-wa-border flex justify-between items-center">
+                <h2 class="text-sm font-bold text-wa-teal">Configurar Seu Perfil</h2>
+                <button onclick="closeEditProfile()" class="text-wa-textMuted hover:text-wa-textActive"><i class="fa-solid fa-xmark"></i></button>
+            </header>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="text-xs text-wa-textMuted block mb-1">Seu Nome de Exibição</label>
+                    <input type="text" id="input-profile-name" class="w-full bg-wa-inputBg border border-wa-border rounded p-2.5 text-sm text-wa-textActive outline-none focus:border-wa-teal" placeholder="Ex: João Silva">
+                </div>
+                <div>
+                    <label class="text-xs text-wa-textMuted block mb-1">ID do seu Avatar (Semente Aleatória)</label>
+                    <input type="text" id="input-profile-avatar" class="w-full bg-wa-inputBg border border-wa-border rounded p-2.5 text-sm text-wa-textActive outline-none focus:border-wa-teal" placeholder="Qualquer palavra para gerar um rosto novo" oninput="previewAvatar()">
+                </div>
+                <div class="flex items-center justify-center py-2">
+                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=user" class="w-16 h-16 rounded-full bg-wa-inputBg p-1 border border-wa-border" alt="Preview Avatar">
+                </div>
+                <button onclick="saveProfile()" class="w-full bg-wa-teal hover:bg-[#008f70] text-wa-panel font-bold text-sm py-2 rounded transition-colors uppercase">
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT DO SISTEMA -->
+    <script>
+        // --- 1. CONFIGURAÇÕES GERAIS E ESTADO DO APP ---
+        let currentUser = {
+            name: "Desenvolvedor",
+            avatarSeed: "user_" + Math.floor(Math.random() * 1000)
+        };
+
+        let cryptoKey = "senha123"; // Chave de criptografia AES padrão inicial
+        let activeChat = "bot"; // chats disponíveis: 'bot' ou 'global'
+        let firebaseApp = null;
+        let db = null;
+        let unsubscribeFirebase = null;
+
+        // Histórico em memória das mensagens locais/simuladas (Textos salvos brutos criptografados)
+        let localChats = {
+            bot: [
+                // Para o bot, as mensagens locais iniciais já são inseridas limpas para simulação
+                { id: "1", sender: "bot", text: "Olá! Bem-vindo ao sistema de chat com criptografia militar AES. 🔒", time: getFormattedTime(), senderName: "Assistente Firebase", isPlain: true },
+                { id: "2", sender: "bot", text: "Mesmo que as mensagens fiquem salvas no LocalStorage ou no Firebase Firestore, elas aparecem totalmente embaralhadas no servidor. Só você e seu destinatário podem ler!", time: getFormattedTime(), senderName: "Assistente Firebase", isPlain: true },
+                { id: "3", sender: "bot", text: "Experimente abrir este chat em 2 abas diferentes. Mude a Chave Secreta em uma delas e veja o que acontece com a mensagem recebida!", time: getFormattedTime(), senderName: "Assistente Firebase", isPlain: true }
+            ],
+            global: [
+                { id: "g1", sender: "system", text: "Modo Protegido Ativado. Digite suas mensagens usando a criptografia ativa.", time: getFormattedTime(), senderName: "Sistema", isPlain: true }
+            ]
+        };
+
+        // --- 2. INICIALIZAÇÃO ---
+        window.onload = function() {
+            loadSavedProfile();
+            loadSavedKey();
+            loadFirebaseFromStorage();
+            setupLocalSync();
+            renderChatList();
+            selectChat('bot');
+            updateSampleText();
+        };
+
+        // Carrega o perfil customizado do usuário
+        function loadSavedProfile() {
+            const saved = localStorage.getItem('wa_profile');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+            }
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.avatarSeed}`;
+        }
+
+        // Carrega chave de criptografia do localStorage
+        function loadSavedKey() {
+            const savedKey = localStorage.getItem('wa_crypto_key');
+            if (savedKey) {
+                cryptoKey = savedKey;
+                document.getElementById('input-crypto-key').value = cryptoKey;
+            }
+        }
+
+        // Permite editar o perfil
+        function openEditProfile() {
+            document.getElementById('input-profile-name').value = currentUser.name;
+            document.getElementById('input-profile-avatar').value = currentUser.avatarSeed;
+            document.getElementById('avatar-preview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.avatarSeed}`;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeEditProfile() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function previewAvatar() {
+            const seed = document.getElementById('input-profile-avatar').value || "user";
+            document.getElementById('avatar-preview').src = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+        }
+
+        function saveProfile() {
+            const nameInput = document.getElementById('input-profile-name').value.trim();
+            const avatarInput = document.getElementById('input-profile-avatar').value.trim();
+            if (nameInput) {
+                currentUser.name = nameInput;
+                currentUser.avatarSeed = avatarInput || "user";
+                localStorage.setItem('wa_profile', JSON.stringify(currentUser));
+                loadSavedProfile();
+                closeEditProfile();
+                
+                // Manda mensagem automática na aba indicando que mudou de nick
+                if (activeChat === 'global') {
+                    sendLocalMessage(`${currentUser.name} atualizou o perfil.`, "system");
+                }
+            }
+        }
+
+        // --- 3. CONEXÃO / CARREGAMENTO DO GOOGLE FIREBASE REAL ---
+        function loadFirebaseFromStorage() {
+            const configStr = localStorage.getItem('firebase_config');
+            if (configStr) {
+                try {
+                    const config = JSON.parse(configStr);
+                    document.getElementById('firebase-config-input').value = JSON.stringify(config, null, 2);
+                    
+                    // Inicializa o Firebase
+                    if (firebase.apps.length === 0) {
+                        firebaseApp = firebase.initializeApp(config);
+                    } else {
+                        firebaseApp = firebase.app();
+                    }
+                    db = firebaseApp.firestore();
+                    console.log("Firebase Conectado com Sucesso!");
+                    
+                    // Se o banco foi conectado, altera o status do Chat Global para nuvem
+                    document.getElementById('global-last-msg').innerHTML = "<span class='text-wa-teal'><i class='fa-solid fa-lock'></i> Conectado e Encriptado no Firebase Cloud!</span>";
+                } catch (e) {
+                    console.error("Erro ao ler dados de configuração do Firebase:", e);
+                    alert("A configuração salva do Firebase contém erros.");
+                }
+            }
+        }
+
+        function saveFirebaseConfig() {
+            const inputVal = document.getElementById('firebase-config-input').value.trim();
+            if (!inputVal) {
+                localStorage.removeItem('firebase_config');
+                alert("Configurações removidas. O app usará o modo de simulação LocalStorage.");
+                window.location.reload();
+                return;
+            }
+            try {
+                const parsed = JSON.parse(inputVal);
+                localStorage.setItem('firebase_config', JSON.stringify(parsed));
+                alert("Configuração do Firebase salva com sucesso! O aplicativo será reiniciado.");
+                window.location.reload();
+            } catch (e) {
+                alert("Erro: Formato JSON inválido. Certifique-se de copiar o objeto corretamente.");
+            }
+        }
+
+        // --- 4. ENGINE DE EVENTOS REAL-TIME LOCAL (Sincronização entre Abas) ---
+        function setupLocalSync() {
+            // Escuta modificações do localStorage disparadas por outras abas
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'wa_sync_global_msg') {
+                    const newMsg = JSON.parse(e.newValue);
+                    if (newMsg && newMsg.senderId !== currentUser.avatarSeed) {
+                        localChats.global.push(newMsg);
+                        if (activeChat === 'global') {
+                            renderMessages();
+                        }
+                        updateLastMessages();
+                    }
+                }
+            });
+
+            // Carrega mensagens globais do cache local para restaurar histórico de abas antigas
+            const savedGlobal = localStorage.getItem('wa_global_history');
+            if (savedGlobal) {
+                localChats.global = JSON.parse(savedGlobal);
+            }
+        }
+
+        // --- 5. RENDERIZADORES DE TELA (HTML DINÂMICO) ---
+        function selectChat(chatId) {
+            activeChat = chatId;
+            
+            // Remove destaque de todos os itens da lista
+            document.getElementById('chat-item-bot').classList.remove('bg-wa-header');
+            document.getElementById('chat-item-global').classList.remove('bg-wa-header');
+            
+            // Adiciona destaque ao selecionado
+            document.getElementById(`chat-item-${chatId}`).classList.add('bg-wa-header');
+            
+            // Esconde tela de boas-vindas
+            document.getElementById('welcome-screen').classList.add('hidden');
+            
+            // Ajusta o header do chat ativo
+            const headerName = document.getElementById('active-chat-name');
+            const headerAvatar = document.getElementById('active-chat-avatar');
+            const headerStatus = document.getElementById('active-chat-status');
+            
+            if (chatId === 'bot') {
+                headerName.textContent = "Assistente Firebase";
+                headerAvatar.src = "https://api.dicebear.com/7.x/identicon/svg?seed=firebase";
+                headerStatus.innerHTML = `<span class="text-amber-500 flex items-center gap-1"><i class="fa-solid fa-lock"></i> Canal Local Seguro</span>`;
+                
+                // Remove qualquer escuta ativa do Firebase
+                if (unsubscribeFirebase) unsubscribeFirebase();
+            } else {
+                headerName.textContent = "Chat Global (Realtime)";
+                headerAvatar.innerHTML = '<div class="w-10 h-10 rounded-full bg-[#005c4b] flex items-center justify-center text-white font-bold"><i class="fa-solid fa-globe text-sm"></i></div>';
+                headerStatus.innerHTML = `<span class="text-amber-500 flex items-center gap-1"><i class="fa-solid fa-user-shield"></i> E2EE AES Ativa</span>`;
+                
+                // Conecta e escuta o Firebase real caso esteja configurado
+                if (db) {
+                    connectToFirebaseRealtime();
+                }
+            }
+
+            // Mobile responsive switch view
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+                document.getElementById('chat-area').classList.remove('hidden');
+                document.getElementById('chat-area').classList.add('flex');
+            }
+            
+            renderMessages();
+        }
+
+        function backToSidebar() {
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('chat-area').classList.add('hidden');
+            document.getElementById('chat-area').classList.remove('flex');
+        }
+
+        // Sincroniza e escuta os dados da nuvem do Firebase Cloud Firestore em tempo real
+        function connectToFirebaseRealtime() {
+            if (unsubscribeFirebase) unsubscribeFirebase();
+            
+            document.getElementById('messages-container').innerHTML = '<div class="text-center py-4 text-xs text-wa-teal"><i class="fa-solid fa-lock animate-bounce"></i> Escutando rede do Firebase Firestore com segurança...</div>';
+
+            unsubscribeFirebase = db.collection('messages')
+                .orderBy('timestamp', 'asc')
+                .limit(50)
+                .onSnapshot(snapshot => {
+                    localChats.global = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        localChats.global.push({
+                            id: doc.id,
+                            sender: data.senderId === currentUser.avatarSeed ? "me" : "other",
+                            text: data.text, // Texto criptografado vindo do banco de dados
+                            senderName: data.senderName || "Membro da Cloud",
+                            time: data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : getFormattedTime(),
+                            isPlain: false // Precisa de descriptografia
+                        });
+                    });
+                    if (activeChat === 'global') {
+                        renderMessages();
+                    }
+                    updateLastMessages();
+                }, error => {
+                    console.error("Erro Firestore Realtime:", error);
+                    alert("Erro ao ler Firestore. Verifique se suas regras de segurança estão ativas.");
+                });
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = "";
+            const currentList = localChats[activeChat];
+            
+            currentList.forEach(msg => {
+                let msgElement = document.createElement('div');
+                msgElement.className = "flex w-full mb-2";
+                
+                // Tenta descriptografar a mensagem se não for plain-text
+                let displayText = msg.text;
+                let decryptedSuccessfully = true;
+
+                if (!msg.isPlain) {
+                    try {
+                        const decryptedBytes = CryptoJS.AES.decrypt(msg.text, cryptoKey);
+                        const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                        
+                        if (decryptedText) {
+                            displayText = decryptedText;
+                        } else {
+                            decryptedSuccessfully = false;
+                            // Se a descriptografia falhar, exibe o ruído codificado bruto que está salvo no Firebase
+                            displayText = `🔒 [Conteúdo Criptografado - Chave Errada]: ${msg.text.substring(0, 45)}...`;
+                        }
+                    } catch (e) {
+                        decryptedSuccessfully = false;
+                        displayText = `🔒 [Conteúdo Criptografado - Chave Errada]: ${msg.text.substring(0, 45)}...`;
+                    }
+                }
+
+                const displayClass = decryptedSuccessfully ? "text-wa-textActive" : "text-amber-500/80 font-mono italic text-xs break-all";
+
+                if (msg.sender === "me") {
+                    msgElement.classList.add('justify-end');
+                    msgElement.innerHTML = `
+                        <div class="bg-wa-outgoing max-w-[65%] rounded-lg rounded-tr-none px-3 py-1.5 shadow-md relative">
+                            <span class="text-[11px] font-bold text-wa-teal block mb-0.5 flex items-center gap-1">Você <i class="fa-solid fa-lock text-[9px] text-amber-500"></i></span>
+                            <p class="text-[14px] leading-normal pr-8 ${displayClass}">${escapeHTML(displayText)}</p>
+                            <span class="text-[10px] text-wa-textMuted absolute bottom-1 right-2 flex items-center gap-1">${msg.time} <i class="fa-solid fa-check-double text-sky-400 text-[10px]"></i></span>
+                        </div>
+                    `;
+                } else if (msg.sender === "system") {
+                    msgElement.classList.add('justify-center', 'my-3');
+                    msgElement.innerHTML = `
+                        <div class="bg-[#182229] border border-wa-border max-w-[85%] rounded-full px-4 py-1 text-center shadow-sm">
+                            <p class="text-[11px] text-wa-teal font-semibold">${escapeHTML(displayText)}</p>
+                        </div>
+                    `;
+                } else {
+                    msgElement.classList.add('justify-start');
+                    msgElement.innerHTML = `
+                        <div class="bg-wa-incoming max-w-[65%] rounded-lg rounded-tl-none px-3 py-1.5 shadow-md relative">
+                            <span class="text-[11px] font-bold text-[#34b7f1] block mb-0.5 flex items-center gap-1">${escapeHTML(msg.senderName)} <i class="fa-solid fa-lock text-[9px] text-amber-500"></i></span>
+                            <p class="text-[14px] leading-normal pr-8 ${displayClass}">${escapeHTML(displayText)}</p>
+                            <span class="text-[10px] text-wa-textMuted absolute bottom-1 right-2">${msg.time}</span>
+                        </div>
+                    `;
+                }
+                container.appendChild(msgElement);
+            });
+            
+            // Auto scroll para o rodapé do chat
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- 6. FUNÇÃO PRINCIPAL DE ENVIO DE MENSAGENS COM CRIPTOGRAFIA ---
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const time = getFormattedTime();
+            const msgId = "local_" + Date.now();
+
+            // Criptografa o texto antes de enviar ou salvar!
+            const encryptedText = CryptoJS.AES.encrypt(text, cryptoKey).toString();
+
+            if (activeChat === 'bot') {
+                // Para o bot mantemos exibição limpa local, mas simula o envio encriptado
+                localChats.bot.push({
+                    id: msgId,
+                    sender: "me",
+                    text: text,
+                    time: time,
+                    senderName: currentUser.name,
+                    isPlain: true
+                });
+                renderMessages();
+                input.value = "";
+                
+                // Resposta simulada do Bot Inteligente
+                setTimeout(() => {
+                    simulateBotResponse(text);
+                }, 1000);
+                
+            } else if (activeChat === 'global') {
+                if (db) {
+                    // Firebase Database ativo: envia a mensagem já encriptada para a nuvem
+                    db.collection('messages').add({
+                        senderId: currentUser.avatarSeed,
+                        senderName: currentUser.name,
+                        text: encryptedText, // Apenas texto criptografado sobe para a Google!
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        input.value = "";
+                    }).catch(err => {
+                        console.error("Erro ao enviar para Firebase:", err);
+                        alert("Não foi possível enviar para o Firebase. Verifique a conexão.");
+                    });
+                } else {
+                    // Firebase Inativo: envia para outras abas locais
+                    const newMsg = {
+                        id: msgId,
+                        senderId: currentUser.avatarSeed,
+                        sender: "other", // interpretado pelas outras abas como receptor
+                        text: encryptedText, // Sincroniza a versão criptografada
+                        time: time,
+                        senderName: currentUser.name,
+                        isPlain: false
+                    };
+
+                    // Salva na nossa aba local (nós conseguimos decriptar pois enviamos)
+                    const localMsg = {...newMsg, sender: "me"};
+                    localChats.global.push(localMsg);
+                    
+                    // Sincroniza com as outras abas via storage
+                    localStorage.setItem('wa_sync_global_msg', JSON.stringify(newMsg));
+                    
+                    // Salva histórico local criptografado no navegador
+                    localStorage.setItem('wa_global_history', JSON.stringify(localChats.global));
+                    
+                    renderMessages();
+                    input.value = "";
+                }
+            }
+            updateLastMessages();
+        }
+
+        // Envia uma mensagem sistêmica local
+        function sendLocalMessage(text, type = "system") {
+            localChats.global.push({
+                id: "sys_" + Date.now(),
+                sender: type,
+                text: text,
+                time: getFormattedTime(),
+                senderName: "Sistema",
+                isPlain: true
+            });
+            localStorage.setItem('wa_global_history', JSON.stringify(localChats.global));
+            if (activeChat === 'global') {
+                renderMessages();
+            }
+            updateLastMessages();
+        }
+
+        function handleInputKeydown(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // --- 7. INTELIGÊNCIA ARTIFICIAL SIMULADA ---
+        function simulateBotResponse(userMsg) {
+            let replyText = "Eu sou o robô do Firebase. Experimente perguntar sobre: 'criptografia', 'como ver no console', ou 'mudar chave'!";
+            const textLower = userMsg.toLowerCase();
+
+            if (textLower.includes('oi') || textLower.includes('olá') || textLower.includes('ola')) {
+                replyText = `Olá, ${currentUser.name}! Eu funciono localmente. Mas se você conectar o Firebase Cloud, suas mensagens no chat global serão encriptadas com a chave "${cryptoKey}" antes de irem para o banco do Google.`;
+            } else if (textLower.includes('criptografia') || textLower.includes('criptografar') || textLower.includes('segurança')) {
+                replyText = "Usamos criptografia AES de 256 bits. Ao digitar algo, a biblioteca 'CryptoJS' transforma o texto em código cifrado. Quem não tiver a sua chave secreta verá apenas ruído inútil.";
+            } else if (textLower.includes('console') || textLower.includes('ver mensagem') || textLower.includes('banco')) {
+                replyText = `Se você entrar no console do Firebase Firestore agora, a mensagem que você enviou aparecerá salva assim: "${CryptoJS.AES.encrypt(userMsg, cryptoKey).toString().substring(0, 30)}...". Ou seja: 100% ilegível para a Google.`;
+            } else if (textLower.includes('mudar') || textLower.includes('chave') || textLower.includes('senha')) {
+                replyText = "Clique no botão 'E2EE' (ícone de chave laranja no topo esquerdo) para alterar a chave secreta. Mude-a em uma aba para ver as mensagens de outras abas ficarem trancadas/ilegíveis!";
+            }
+
+            localChats.bot.push({
+                id: "bot_" + Date.now(),
+                sender: "bot",
+                text: replyText,
+                time: getFormattedTime(),
+                senderName: "Assistente Firebase",
+                isPlain: true
+            });
+            renderMessages();
+            updateLastMessages();
+        }
+
+        // --- 8. UTILITÁRIOS ---
+        function getFormattedTime() {
+            const date = new Date();
+            return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function updateLastMessages() {
+            // Atualiza os resumos visuais do chat na lista lateral esquerda
+            const lastBotMsg = localChats.bot[localChats.bot.length - 1];
+            if (lastBotMsg) {
+                document.getElementById('bot-last-msg').textContent = lastBotMsg.text;
+                document.getElementById('bot-last-time').textContent = lastBotMsg.time;
+            }
+
+            const lastGlobalMsg = localChats.global[localChats.global.length - 1];
+            if (lastGlobalMsg) {
+                // Tenta decriptar para o preview se possível
+                let rawText = lastGlobalMsg.text;
+                if (!lastGlobalMsg.isPlain) {
+                    try {
+                        const dec = CryptoJS.AES.decrypt(rawText, cryptoKey).toString(CryptoJS.enc.Utf8);
+                        rawText = dec ? dec : "🔒 Mensagem protegida (Chave diferente)";
+                    } catch (e) {
+                        rawText = "🔒 Mensagem criptografada";
+                    }
+                }
+                document.getElementById('global-last-msg').textContent = rawText;
+                document.getElementById('global-last-time').textContent = lastGlobalMsg.time;
+            }
+        }
+
+        function toggleSetupModal() {
+            document.getElementById('setup-modal').classList.toggle('hidden');
+        }
+
+        function toggleKeyModal() {
+            document.getElementById('key-modal').classList.toggle('hidden');
+            updateSampleText();
+        }
+
+        function updateSampleText() {
+            // Demonstra o código embaralhado em tempo real no modal
+            const sampleInput = "Olá, esta é uma mensagem 100% protegida!";
+            const sampleKey = document.getElementById('input-crypto-key').value || "chave";
+            const encrypted = CryptoJS.AES.encrypt(sampleInput, sampleKey).toString();
+            document.getElementById('encrypted-sample').textContent = encrypted;
+        }
+
+        function saveCryptoKey() {
+            const newKey = document.getElementById('input-crypto-key').value.trim();
+            if (newKey) {
+                cryptoKey = newKey;
+                localStorage.setItem('wa_crypto_key', cryptoKey);
+                toggleKeyModal();
+                renderMessages();
+                updateLastMessages();
+                alert(`Chave de Criptografia alterada para: "${cryptoKey}". O chat foi re-renderizado.`);
+            } else {
+                alert("Insira uma chave válida!");
+            }
+        }
+
+        // Escuta digitação no input do modal para atualizar demonstração
+        document.getElementById('input-crypto-key').addEventListener('input', updateSampleText);
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function renderChatList() {
+            updateLastMessages();
+        }
+    </script>
+</body>
+</html>
