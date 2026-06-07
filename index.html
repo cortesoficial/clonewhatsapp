@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Web - Secure Clone</title>
   
+  <!-- Tailwind CSS para design responsivo e moderno -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Biblioteca de Ícones FontAwesome para representação fiel do WhatsApp -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- CryptoJS para criptografia invisível AES-256 das mensagens antes do envio -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <script>
@@ -65,13 +68,18 @@
 </head>
 <body class="bg-[#111b21] text-slate-800 dark:text-slate-100 min-h-screen flex items-center justify-center p-0 md:p-4 overflow-hidden font-sans transition-colors duration-200">
 
+  <!-- Contentor para Notificações Flutuantes do Sistema -->
   <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
+  <!-- ECRÃ DE LOGIN (ESTILO TELA DE CONEXÃO DO WHATSAPP WEB) -->
   <div id="login-screen" class="fixed inset-0 bg-[#111b21] z-40 flex flex-col items-center justify-start pt-12 md:pt-24 p-4 overflow-y-auto">
+    <!-- Faixa verde superior do WhatsApp -->
     <div class="absolute top-0 left-0 w-full h-[222px] bg-wa-teal -z-10"></div>
     
-    <div class="bg-white dark:bg-wa-sidebarDark rounded-md shadow-2xl p-6 md:p-10 max-w-2xl w-full border border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row gap-8 items-center relative my-auto">
+    <!-- Caixa de Login -->
+    <div class="bg-white dark:bg-wa-sidebarDark rounded-md shadow-2xl p-6 md:p-10 max-w-2xl w-full border border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row gap-8 items-center my-auto relative">
       
+      <!-- Lado Esquerdo: Instruções e Nome de Exibição -->
       <div class="flex-1 w-full text-left">
         <div class="flex items-center gap-3 mb-6">
           <i class="fa-brands fa-whatsapp text-wa-teal text-4xl"></i>
@@ -80,26 +88,36 @@
         
         <h2 class="text-xl font-normal text-slate-700 dark:text-slate-200 mb-4">Para usar o chat no seu computador:</h2>
         <ol class="list-decimal list-inside space-y-2.5 text-sm text-slate-500 dark:text-slate-400 mb-6">
-          <li>Insira o seu <strong class="text-slate-700 dark:text-slate-200">Nome ou Apelido</strong> no campo abaixo.</li>
+          <li>Insira o seu <strong class="text-slate-700 dark:text-slate-200">Nome</strong> e <strong class="text-slate-700 dark:text-slate-200">Número de Telefone</strong> abaixo.</li>
           <li>Gere uma foto de perfil clicando no ícone giratório.</li>
           <li>Escolha uma das opções de autenticação à direita para entrar.</li>
         </ol>
 
-        <div class="bg-slate-50 dark:bg-wa-headerDark border border-slate-100 dark:border-slate-700 rounded-lg p-4 flex items-center gap-4">
-          <div class="relative shrink-0">
-            <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp" alt="Avatar Preview" class="w-14 h-14 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 object-cover">
-            <button id="btn-random-avatar" type="button" class="absolute -bottom-1 -right-1 bg-wa-teal hover:bg-wa-tealDark text-white p-1.5 rounded-full shadow transition-colors" title="Mudar Avatar">
-              <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-            </button>
+        <!-- Configuração Inicial do Perfil -->
+        <div class="bg-slate-50 dark:bg-wa-headerDark border border-slate-100 dark:border-slate-700 rounded-lg p-4 space-y-4">
+          <div class="flex items-center gap-4">
+            <div class="relative shrink-0">
+              <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp" alt="Avatar Preview" class="w-14 h-14 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 object-cover">
+              <button id="btn-random-avatar" type="button" class="absolute -bottom-1 -right-1 bg-wa-teal hover:bg-wa-tealDark text-white p-1.5 rounded-full shadow transition-colors" title="Mudar Avatar">
+                <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+              </button>
+            </div>
+            <div class="flex-1">
+              <label for="login-display-name" class="text-[11px] text-slate-400 block mb-1">Como quer ser chamado no chat?</label>
+              <input type="text" id="login-display-name" placeholder="Escreva o seu nome..." class="w-full bg-white dark:bg-[#2a3942] text-sm px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-wa-teal text-slate-800 dark:text-white">
+            </div>
           </div>
-          <div class="flex-1">
-            <label for="login-display-name" class="text-[11px] text-slate-400 block mb-1">Como quer ser chamado no chat?</label>
-            <input type="text" id="login-display-name" placeholder="Escreva o seu nome..." class="w-full bg-white dark:bg-[#2a3942] text-sm px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-wa-teal text-slate-800 dark:text-white">
+          
+          <div>
+            <label for="login-phone" class="text-[11px] text-slate-400 block mb-1">Número de Telefone (Ex: 351912345678 ou 5511999999999)</label>
+            <input type="tel" id="login-phone" placeholder="Digite apenas números com código do país..." class="w-full bg-white dark:bg-[#2a3942] text-sm px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-wa-teal text-slate-800 dark:text-white">
           </div>
         </div>
       </div>
 
+      <!-- Lado Direito: Ações de Entrada -->
       <div class="w-full md:w-60 flex flex-col gap-3 justify-center shrink-0">
+        <!-- Autenticação Google -->
         <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-[#202c33] hover:bg-slate-50 dark:hover:bg-[#2a3942] text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm transition-all duration-150 active:scale-95">
           <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.61 14.99 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.27 7.57 8.91 5.04 12 5.04z"/>
@@ -110,6 +128,7 @@
           Conta Google
         </button>
 
+        <!-- Entrada rápida usando o Perfil Criado -->
         <button id="btn-anon-login" class="w-full bg-wa-teal hover:bg-wa-tealDark text-white font-semibold py-3 px-4 rounded-lg shadow transition-all duration-150 active:scale-95">
           Entrar como Perfil
         </button>
@@ -122,11 +141,15 @@
     </div>
   </div>
 
+  <!-- APLICAÇÃO PRINCIPAL DO WHATSAPP CLONE -->
   <div id="app-container" class="hidden w-full h-screen md:h-[95vh] md:max-w-[1455px] md:rounded-lg shadow-2xl overflow-hidden flex bg-[#f0f2f5] dark:bg-[#0a1014] border border-slate-200 dark:border-slate-800/60">
     
+    <!-- PAINEL LATERAL ESQUERDO (LISTA DE CONVERSAS E GAVETA DE PERFIL) -->
     <aside id="sidebar" class="w-full md:w-[410px] shrink-0 bg-white dark:bg-wa-sidebarDark border-r border-slate-200 dark:border-slate-800/80 flex flex-col h-full relative z-20">
       
+      <!-- Cabeçalho do Painel Lateral -->
       <div class="h-16 bg-wa-headerLight dark:bg-wa-headerDark px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/50 shrink-0">
+        <!-- Foto de Perfil do utilizador (clique abre gaveta interna) -->
         <div id="btn-profile-drawer" class="cursor-pointer relative group">
           <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div class="absolute inset-0 bg-black/15 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -134,7 +157,12 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-4 text-slate-600 dark:text-slate-300">
+        <!-- Opções e Ferramentas Superiores -->
+        <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+          <!-- Iniciar nova conversa por Telefone -->
+          <button id="btn-open-add-chat" class="hover:bg-slate-200 dark:hover:bg-[#2a3942] p-2 rounded-full transition-colors" title="Nova conversa por telefone">
+            <i class="fa-solid fa-comment-medical text-lg text-wa-teal"></i>
+          </button>
           <button id="btn-theme-toggle" class="hover:bg-slate-200 dark:hover:bg-[#2a3942] p-2 rounded-full transition-colors" title="Mudar Tema">
             <i class="fa-solid fa-moon dark:hidden text-lg"></i>
             <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
@@ -145,42 +173,31 @@
         </div>
       </div>
 
+      <!-- Barra de Pesquisa de Conversas -->
       <div class="p-2 bg-white dark:bg-wa-sidebarDark border-b border-slate-100 dark:border-slate-800/50 flex items-center gap-2 shrink-0">
         <div class="flex-1 bg-[#f0f2f5] dark:bg-wa-headerDark rounded-lg px-3 py-1.5 flex items-center gap-3">
           <i class="fa-solid fa-search text-slate-400 text-sm"></i>
-          <input type="text" placeholder="Procurar ou começar uma nova conversa" class="bg-transparent text-xs w-full focus:outline-none text-slate-800 dark:text-slate-200">
-        </div>
-        <button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-          <i class="fa-solid fa-filter text-sm"></i>
-        </button>
-      </div>
-
-      <div class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40 no-scrollbar">
-        <div class="flex items-center gap-3 p-3 bg-[#f0f2f5] dark:bg-[#2a3942] cursor-pointer transition-colors relative">
-          <div class="w-12 h-12 rounded-full bg-wa-teal flex items-center justify-center text-white text-lg shrink-0">
-            <i class="fa-solid fa-users"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex justify-between items-baseline mb-1">
-              <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">Grupo Geral Seguro</h4>
-              <span id="last-msg-time" class="text-[11px] text-slate-400">Agora</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <p id="sidebar-preview-text" class="text-xs text-slate-400 dark:text-slate-400 truncate pr-4">A carregar mensagens...</p>
-              <span class="bg-wa-teal text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full shrink-0">Ativo</span>
-            </div>
-          </div>
+          <input type="text" id="search-chat-input" placeholder="Procurar conversa..." class="bg-transparent text-xs w-full focus:outline-none text-slate-800 dark:text-slate-200">
         </div>
       </div>
 
+      <!-- Lista de Canais/Conversas do WhatsApp (Carregada Dinamicamente) -->
+      <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40 no-scrollbar">
+        <!-- Chats Dinâmicos serão injetados aqui via JS -->
+      </div>
+
+      <!-- GAVETA INTERNA DE CONFIGURAÇÃO DE PERFIL (DESLIZA DA ESQUERDA) -->
       <div id="profile-drawer" class="absolute inset-0 bg-white dark:bg-wa-sidebarDark z-30 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <!-- Cabeçalho da Gaveta -->
         <div class="h-28 bg-wa-teal dark:bg-wa-tealDark flex items-end p-5 text-white gap-6 shrink-0">
           <button id="btn-close-profile" type="button" class="mb-1 hover:bg-black/10 p-2 rounded-full transition-colors">
             <i class="fa-solid fa-arrow-left text-lg"></i>
           </button>
           <span class="font-semibold text-lg mb-1">Perfil</span>
         </div>
+        <!-- Conteúdo de Edição de Perfil -->
         <div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-wa-darkBg p-6 flex flex-col items-center">
+          <!-- Troca Dinâmica do Avatar -->
           <div class="relative group cursor-pointer mb-8">
             <img id="drawer-avatar-preview" src="" alt="Avatar" class="w-36 h-36 rounded-full border-2 border-white dark:border-slate-800 shadow-md object-cover bg-white dark:bg-slate-700">
             <button id="btn-drawer-random-avatar" type="button" class="absolute bottom-2 right-2 bg-wa-teal hover:bg-wa-tealDark text-white p-2.5 rounded-full shadow-lg transition-all" title="Gerar outro avatar">
@@ -188,6 +205,7 @@
             </button>
           </div>
 
+          <!-- Campo de Troca de Nome -->
           <div class="w-full bg-white dark:bg-wa-sidebarDark p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800/80 mb-4">
             <label class="text-xs text-wa-teal font-semibold uppercase block mb-2">O seu nome no Chat</label>
             <div class="flex items-center gap-3">
@@ -197,20 +215,25 @@
               </button>
             </div>
           </div>
-          <p class="text-xs text-slate-400 text-center px-4">Este nome e imagem serão vistos imediatamente por todos os participantes do grupo quando enviar mensagens.</p>
+
+          <!-- Telefone de Perfil (Apenas Leitura) -->
+          <div class="w-full bg-white dark:bg-wa-sidebarDark p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800/80">
+            <label class="text-xs text-slate-400 font-semibold uppercase block mb-1">Número de Telefone</label>
+            <div id="drawer-phone-display" class="text-sm text-slate-800 dark:text-slate-300 font-mono"></div>
+          </div>
         </div>
       </div>
     </aside>
 
+    <!-- PAINEL DIREITO DE CONVERSA PRINCIPAL (JANELA DO CHAT) -->
     <main class="flex-1 flex flex-col h-full bg-[#efeae2] dark:bg-wa-darkBg relative z-10 border-l border-slate-200 dark:border-slate-800/80">
       
+      <!-- Cabeçalho do Chat Ativo -->
       <header class="h-16 bg-wa-headerLight dark:bg-wa-headerDark px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/50 shrink-0 relative z-20">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-wa-teal flex items-center justify-center text-white text-md">
-            <i class="fa-solid fa-users"></i>
-          </div>
+          <img id="active-chat-avatar" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Geral" class="w-10 h-10 rounded-full object-cover shrink-0 bg-white dark:bg-slate-800">
           <div>
-            <h3 class="font-medium text-sm text-slate-900 dark:text-slate-100">Grupo Geral Seguro</h3>
+            <h3 id="active-chat-title" class="font-medium text-sm text-slate-900 dark:text-slate-100">Grupo Geral Seguro</h3>
             <p class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 select-none">
               <i class="fa-solid fa-lock text-wa-teal text-[9px]"></i> Criptografia End-to-End AES-256 Ativa
             </p>
@@ -223,7 +246,9 @@
         </div>
       </header>
 
+      <!-- Janela de Exibição de Mensagens -->
       <div id="messages-window" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 wa-wallpaper-light dark:wa-wallpaper-dark relative flex flex-col no-scrollbar">
+        <!-- Cartão Amarelo Informativo do WhatsApp -->
         <div class="self-center bg-[#ffeec2] dark:bg-[#182229] border border-[#f5e0ac] dark:border-transparent rounded-lg p-2.5 max-w-md text-center shadow-sm z-10 select-none my-2">
           <p class="text-[11px] text-[#544c3d] dark:text-[#ffd279] leading-relaxed">
             <i class="fa-solid fa-lock text-[10px] mr-1"></i> As mensagens são criptografadas localmente com chaves simétricas. Ninguém fora deste chat pode ler o conteúdo enviado.
@@ -231,12 +256,15 @@
         </div>
       </div>
 
+      <!-- Barra de Digitação de Mensagem (Footer) -->
       <footer class="p-3 bg-wa-headerLight dark:bg-[#1f2c34] flex items-center gap-3 border-t border-slate-200 dark:border-slate-800/50 shrink-0 relative z-20">
+        <!-- Botões de Anexo e Emojis -->
         <div class="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-xl select-none">
           <i class="fa-regular fa-face-smile cursor-pointer hover:text-slate-700 dark:hover:text-slate-200"></i>
           <i class="fa-solid fa-plus cursor-pointer hover:text-slate-700 dark:hover:text-slate-200"></i>
         </div>
 
+        <!-- Campo de Input e Formulário principal -->
         <form id="chat-form" class="flex-1 flex gap-3">
           <input type="text" id="message-input" autocomplete="off" placeholder="Escreva uma mensagem..." class="flex-1 bg-white dark:bg-[#2a3942] py-2 px-4 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none shadow-sm">
           <button type="submit" class="text-slate-500 dark:text-slate-400 hover:text-wa-teal dark:hover:text-wa-teal text-lg p-1 transition-colors">
@@ -251,11 +279,50 @@
 
   </div>
 
+  <!-- MODAL PARA ADICIONAR CONVERSA POR NÚMERO DE TELEFONE -->
+  <div id="add-chat-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#222e35] rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-700 animate-fadeIn text-left">
+      <div class="bg-wa-teal p-4 text-white flex justify-between items-center">
+        <h3 class="font-bold text-lg"><i class="fa-solid fa-user-plus mr-2"></i>Nova Conversa</h3>
+        <button id="btn-close-add-chat-modal" class="hover:bg-white/10 p-1.5 rounded-full transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Insira o número de telemóvel do utilizador registado para iniciar uma conversa encriptada de ponta a ponta.
+        </p>
+        <div>
+          <label for="search-phone-input" class="text-xs text-slate-400 block mb-1">Número de Telefone</label>
+          <input type="tel" id="search-phone-input" placeholder="Ex: 351912345678" class="w-full bg-slate-50 dark:bg-[#111b21] border border-slate-200 dark:border-slate-800 text-sm px-3 py-2.5 rounded-md focus:outline-none focus:border-wa-teal text-slate-800 dark:text-white">
+        </div>
+        
+        <!-- Área de resultado de busca -->
+        <div id="search-result-container" class="hidden border border-slate-100 dark:border-slate-800 rounded-lg p-4 bg-slate-50 dark:bg-[#111b21] flex items-center gap-4">
+          <img id="search-result-avatar" src="" class="w-12 h-12 rounded-full object-cover bg-white">
+          <div class="flex-1 min-w-0">
+            <h4 id="search-result-name" class="font-semibold text-sm text-slate-900 dark:text-white truncate"></h4>
+            <p id="search-result-phone" class="text-xs text-slate-400 font-mono"></p>
+          </div>
+          <button id="btn-start-private-chat" class="bg-wa-teal hover:bg-wa-tealDark text-white text-xs px-3 py-2 rounded-md font-semibold transition-colors">
+            Conversar
+          </button>
+        </div>
+        
+        <!-- Botão de Pesquisa -->
+        <button id="btn-submit-search-phone" class="w-full bg-wa-teal hover:bg-wa-tealDark text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-magnifying-glass"></i> Procurar Contacto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INICIALIZAÇÃO E SCRIPT FIREBASE SDK -->
   <script type="module">
     // Importações do SDK v11 Oficial do Google Firebase via CDN Seguro
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    import { getFirestore, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
     // Credenciais oficiais extraídas diretamente do seu google-services.json
     const firebaseConfig = {
@@ -280,11 +347,15 @@
 
     // Estado Local Controlado
     let currentUser = null;
-    let messagesList = [];
-    
+    let registeredUsers = [];  // Lista de todos os utilizadores para busca local (Regra 2)
+    let chatsList = [];        // Lista de chats ativos
+    let messagesList = [];     // Todas as mensagens do chat selecionado
+    let currentChatId = 'sala-geral'; // Canal inicial padrão
+
     let localProfile = {
       displayName: "",
-      photoURL: "https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp"
+      photoURL: "https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp",
+      phoneNumber: ""
     };
 
     // Mapeamento de Elementos do DOM
@@ -297,6 +368,7 @@
     const loginAvatarPreview = document.getElementById('login-avatar-preview');
     const btnRandomAvatar = document.getElementById('btn-random-avatar');
     const loginDisplayNameInput = document.getElementById('login-display-name');
+    const loginPhoneInput = document.getElementById('login-phone');
 
     // Elementos da Gaveta de Perfil Lateral
     const userAvatar = document.getElementById('user-avatar');
@@ -306,15 +378,30 @@
     const drawerAvatarPreview = document.getElementById('drawer-avatar-preview');
     const btnDrawerRandomAvatar = document.getElementById('btn-drawer-random-avatar');
     const drawerDisplayNameInput = document.getElementById('drawer-display-name-input');
+    const drawerPhoneDisplay = document.getElementById('drawer-phone-display');
     const btnSaveDrawerProfile = document.getElementById('btn-save-drawer-profile');
-
-    const sidebarPreviewText = document.getElementById('sidebar-preview-text');
-    const lastMsgTime = document.getElementById('last-msg-time');
 
     const messagesWindow = document.getElementById('messages-window');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
     const btnThemeToggle = document.getElementById('btn-theme-toggle');
+
+    // Elementos do Modal de Adicionar Conversa
+    const btnOpenAddChat = document.getElementById('btn-open-add-chat');
+    const addChatModal = document.getElementById('add-chat-modal');
+    const btnCloseAddChatModal = document.getElementById('btn-close-add-chat-modal');
+    const searchPhoneInput = document.getElementById('search-phone-input');
+    const btnSubmitSearchPhone = document.getElementById('btn-submit-search-phone');
+    const searchResultContainer = document.getElementById('search-result-container');
+    const searchResultAvatar = document.getElementById('search-result-avatar');
+    const searchResultName = document.getElementById('search-result-name');
+    const searchResultPhone = document.getElementById('search-result-phone');
+    const btnStartPrivateChat = document.getElementById('btn-start-private-chat');
+    
+    // Lista de Chats na Lateral
+    const chatsListContainer = document.getElementById('chats-list-container');
+    const activeChatAvatar = document.getElementById('active-chat-avatar');
+    const activeChatTitle = document.getElementById('active-chat-title');
 
     // Troca de avatares aleatórios na Entrada
     btnRandomAvatar.addEventListener('click', () => {
@@ -334,6 +421,7 @@
     btnProfileDrawer.addEventListener('click', () => {
       drawerAvatarPreview.src = currentUser?.isAnonymous ? localProfile.photoURL : currentUser?.photoURL;
       drawerDisplayNameInput.value = currentUser?.isAnonymous ? (localProfile.displayName || "Anónimo") : currentUser?.displayName;
+      drawerPhoneDisplay.textContent = currentUser?.isAnonymous ? localProfile.phoneNumber : "Google Login";
       profileDrawer.classList.remove('-translate-x-full');
     });
 
@@ -343,7 +431,7 @@
     });
 
     // Salvar modificações do Perfil de Usuário de forma instantânea
-    btnSaveDrawerProfile.addEventListener('click', () => {
+    btnSaveDrawerProfile.addEventListener('click', async () => {
       const typedName = drawerDisplayNameInput.value.trim();
       if (!typedName) {
         showNotification("O nome de exibição não pode ficar em branco.", "error");
@@ -351,10 +439,127 @@
       }
       localProfile.displayName = typedName;
       userAvatar.src = localProfile.photoURL;
+      
+      // Atualizar no Firestore público de perfis (Regra 1)
+      if (currentUser) {
+        try {
+          const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid);
+          await setDoc(userDocRef, {
+            uid: currentUser.uid,
+            displayName: typedName,
+            photoURL: localProfile.photoURL,
+            phoneNumber: localProfile.phoneNumber
+          }, { merge: true });
+        } catch (err) {
+          console.error("Falha ao sincronizar perfil alterado:", err);
+        }
+      }
+
       profileDrawer.classList.add('-translate-x-full');
       showNotification("Perfil modificado com sucesso!", "success");
-      renderMessages(messagesList); // Re-renderizar para ajustar visualização local
     });
+
+    // SISTEMA DE MODAL DE NOVA CONVERSA POR TELEFONE
+    btnOpenAddChat.addEventListener('click', () => {
+      searchPhoneInput.value = "";
+      searchResultContainer.classList.add('hidden');
+      addChatModal.classList.remove('hidden');
+    });
+
+    btnCloseAddChatModal.addEventListener('click', () => {
+      addChatModal.classList.add('hidden');
+    });
+
+    // Procurar Utilizador por Telemóvel na Lista Local (Regra 2)
+    btnSubmitSearchPhone.addEventListener('click', () => {
+      const targetPhone = searchPhoneInput.value.trim().replace(/\D/g, ""); // Apenas números
+      if (!targetPhone) {
+        showNotification("Digite um número de telefone válido.", "error");
+        return;
+      }
+
+      if (targetPhone === localProfile.phoneNumber) {
+        showNotification("Não pode adicionar-se a si mesmo.", "error");
+        return;
+      }
+
+      // Procurar localmente para obedecer estritamente à Regra 2 (sem queries complexas)
+      const foundUser = registeredUsers.find(u => u.phoneNumber.replace(/\D/g, "") === targetPhone);
+
+      if (foundUser) {
+        searchResultAvatar.src = foundUser.photoURL || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${foundUser.uid}`;
+        searchResultName.textContent = foundUser.displayName || "Utilizador";
+        searchResultPhone.textContent = `+${foundUser.phoneNumber}`;
+        
+        // Guardar o objeto do utilizador encontrado no botão
+        btnStartPrivateChat.onclick = () => createOrJoinPrivateChat(foundUser);
+        
+        searchResultContainer.classList.remove('hidden');
+      } else {
+        searchResultContainer.classList.add('hidden');
+        showNotification("Nenhum utilizador encontrado com este telemóvel.", "error");
+      }
+    });
+
+    // Criar sala de chat individual privada no Firestore (Regra 1)
+    async function createOrJoinPrivateChat(targetUser) {
+      if (!currentUser) return;
+      
+      // ID do Chat será o menor UID concatenado com o maior UID para ser único
+      const chatId = currentUser.uid < targetUser.uid 
+        ? `${currentUser.uid}_${targetUser.uid}` 
+        : `${targetUser.uid}_${currentUser.uid}`;
+
+      try {
+        const chatDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'chats', chatId);
+        
+        // Gravar metadados do Chat de forma que ambos consigam ler
+        await setDoc(chatDocRef, {
+          id: chatId,
+          participants: [currentUser.uid, targetUser.uid],
+          participantDetails: {
+            [currentUser.uid]: {
+              displayName: currentUser.isAnonymous ? localProfile.displayName : currentUser.displayName,
+              photoURL: currentUser.isAnonymous ? localProfile.photoURL : currentUser.photoURL,
+              phoneNumber: localProfile.phoneNumber
+            },
+            [targetUser.uid]: {
+              displayName: targetUser.displayName,
+              photoURL: targetUser.photoURL,
+              phoneNumber: targetUser.phoneNumber
+            }
+          },
+          timestamp: Date.now()
+        }, { merge: true });
+
+        addChatModal.classList.add('hidden');
+        showNotification(`Conversa iniciada com ${targetUser.displayName}!`, "success");
+        
+        // Selecionar conversa
+        selectActiveChat(chatId, targetUser.displayName, targetUser.photoURL);
+      } catch (err) {
+        console.error("Falha ao criar conversa:", err);
+        showNotification("Erro ao iniciar conversa privada.", "error");
+      }
+    }
+
+    // Selecionar o canal ativo de comunicação
+    function selectActiveChat(chatId, title, avatarUrl) {
+      currentChatId = chatId;
+      activeChatTitle.textContent = title;
+      activeChatAvatar.src = avatarUrl;
+      
+      // Atualizar visual da barra lateral e filtrar as mensagens
+      document.querySelectorAll('.chat-item-node').forEach(node => {
+        if (node.dataset.chatid === chatId) {
+          node.classList.add('bg-[#f0f2f5]', 'dark:bg-[#2a3942]');
+        } else {
+          node.classList.remove('bg-[#f0f2f5]', 'dark:bg-[#2a3942]');
+        }
+      });
+
+      renderMessages(messagesList);
+    }
 
     // Sistema Interno de Notificações Inteligentes
     function showNotification(message, type = 'info') {
@@ -384,7 +589,7 @@
       }, 4000);
     }
 
-    // Gerador de Alternância Light / Dark Mode nativo com troca de papel de parede
+    // Alternar Modo de Visualização Escuro / Claro
     btnThemeToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       const wallpaper = messagesWindow;
@@ -416,13 +621,82 @@
       }
     }
 
+    // Renderizar lista das conversas (Regra 2 - Filtramos os chats permitidos localmente na memória)
+    function renderChatsList() {
+      chatsListContainer.innerHTML = '';
+
+      // Adicionar chat "Grupo Geral Seguro" por padrão
+      const generalItem = document.createElement('div');
+      generalItem.className = `chat-item-node flex items-center gap-3 p-3 cursor-pointer transition-colors relative ${currentChatId === 'sala-geral' ? 'bg-[#f0f2f5] dark:bg-[#2a3942]' : ''}`;
+      generalItem.dataset.chatid = 'sala-geral';
+      generalItem.onclick = () => selectActiveChat('sala-geral', 'Grupo Geral Seguro', 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Geral');
+      
+      // Encontrar última mensagem do grupo
+      const lastGroupMsg = [...messagesList].filter(m => m.chatId === 'sala-geral').pop();
+      const lastGroupPayload = lastGroupMsg ? (lastGroupMsg.isEncrypted ? decryptMessage(lastGroupMsg.text, SILENT_AES_KEY) : lastGroupMsg.text) : 'Grupo seguro criptografado.';
+      const lastGroupTime = lastGroupMsg ? new Date(lastGroupMsg.timestamp).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) : '';
+
+      generalItem.innerHTML = `
+        <div class="w-12 h-12 rounded-full bg-wa-teal flex items-center justify-center text-white text-lg shrink-0">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between items-baseline mb-1">
+            <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">Grupo Geral Seguro</h4>
+            <span class="text-[11px] text-slate-400 font-mono">${lastGroupTime}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-slate-400 dark:text-slate-400 truncate pr-4">${lastGroupPayload}</p>
+            <span class="bg-wa-teal text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full shrink-0">Global</span>
+          </div>
+        </div>
+      `;
+      chatsListContainer.appendChild(generalItem);
+
+      // Renderizar chats individuais criados (filtrados para incluir o utilizador logado)
+      chatsList.forEach(chat => {
+        if (!chat.participants.includes(currentUser?.uid)) return;
+
+        // Identificar o participante de contacto (o outro utilizador)
+        const otherUserId = chat.participants.find(uid => uid !== currentUser.uid);
+        const details = chat.participantDetails?.[otherUserId] || { displayName: "Contacto", photoURL: "" };
+
+        const chatItem = document.createElement('div');
+        chatItem.className = `chat-item-node flex items-center gap-3 p-3 cursor-pointer transition-colors relative ${currentChatId === chat.id ? 'bg-[#f0f2f5] dark:bg-[#2a3942]' : ''}`;
+        chatItem.dataset.chatid = chat.id;
+        chatItem.onclick = () => selectActiveChat(chat.id, details.displayName, details.photoURL || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${otherUserId}`);
+
+        // Encontrar última mensagem privada do chat específico
+        const lastMsg = [...messagesList].filter(m => m.chatId === chat.id).pop();
+        const lastPayload = lastMsg ? (lastMsg.isEncrypted ? decryptMessage(lastMsg.text, SILENT_AES_KEY) : lastMsg.text) : 'Conversa vazia.';
+        const lastTime = lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        chatItem.innerHTML = `
+          <img src="${details.photoURL || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${otherUserId}`}" class="w-12 h-12 rounded-full object-cover shrink-0 bg-white border border-slate-200 dark:border-slate-800">
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline mb-1">
+              <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">${details.displayName}</h4>
+              <span class="text-[11px] text-slate-400 font-mono">${lastTime}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate-400 dark:text-slate-450 truncate pr-4">${lastPayload}</p>
+            </div>
+          </div>
+        `;
+        chatsListContainer.appendChild(chatItem);
+      });
+    }
+
     // --- RENDERIZADOR DE BALÕES DE DIÁLOGO WHATSAPP ---
     function renderMessages(messages) {
       const initialHero = messagesWindow.firstElementChild;
       messagesWindow.innerHTML = '';
       messagesWindow.appendChild(initialHero);
 
-      messages.forEach(msg => {
+      // Filtra as mensagens pelo chatID atual ativo localmente (Regra 2)
+      const chatMessages = messages.filter(msg => msg.chatId === currentChatId);
+
+      chatMessages.forEach(msg => {
         const isMe = msg.senderId === currentUser?.uid;
         
         // Decriptação em tempo de renderização
@@ -455,18 +729,6 @@
 
       // Manter a janela de chat sempre rolada para baixo
       messagesWindow.scrollTop = messagesWindow.scrollHeight;
-
-      // Sincronizar o último texto na barra lateral de conversas
-      if (messages.length > 0) {
-        const lastMsg = messages[messages.length - 1];
-        const lastMsgDecrypted = lastMsg.isEncrypted ? decryptMessage(lastMsg.text, SILENT_AES_KEY) : lastMsg.text;
-        sidebarPreviewText.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">${lastMsg.senderName}:</span> ${lastMsgDecrypted}`;
-        
-        const date = new Date(lastMsg.timestamp);
-        lastMsgTime.textContent = date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-      } else {
-        sidebarPreviewText.textContent = "Sem mensagens ativas";
-      }
     }
 
     // --- FORMULÁRIO DE ENVIO PARA O CLOUD FIRESTORE ---
@@ -476,7 +738,7 @@
       if (!textRaw) return;
 
       if (!currentUser) {
-        showNotification("Impossível enviar: sem sessão ativa.", "error");
+        showNotification("Erro: Autenticação em falta.", "error");
         return;
       }
 
@@ -487,6 +749,7 @@
       const finalAvatar = currentUser.isAnonymous ? localProfile.photoURL : currentUser.photoURL;
 
       const messageObj = {
+        chatId: currentChatId, // Sincronizado ao chat ativo
         senderName: finalName || "Utilizador",
         senderAvatar: finalAvatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentUser.uid}`,
         senderId: currentUser.uid,
@@ -496,18 +759,18 @@
       };
 
       try {
-        // Envio estruturado de integridade da rota pública
+        // REGRA ESTRITA 1: Gravar exclusivamente no caminho correto para evitar falhas de permissão
         const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
         await addDoc(messagesRef, messageObj);
         messageInput.value = '';
       } catch (err) {
         console.error("Erro no envio:", err);
-        showNotification("Erro na conexão ao Firebase. Verifique as regras de segurança.", "error");
+        showNotification("Ligar ao Firebase falhou. Verifique as suas chaves e regras.", "error");
       }
     });
 
-    // --- GESTÃO DE INTERFACE DO ESTADO DE AUTH ---
-    const updateAuthUI = (user) => {
+    // --- ATUALIZAÇÃO VISUAL DA AUTENTICAÇÃO ---
+    const updateAuthUI = async (user) => {
       if (user) {
         currentUser = user;
         loginScreen.classList.add('hidden');
@@ -518,6 +781,19 @@
 
         userAvatar.src = finalAvatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.uid}`;
         
+        // Registrar o utilizador na coleção global de busca (Regra 1)
+        try {
+          const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid);
+          await setDoc(userDocRef, {
+            uid: user.uid,
+            displayName: finalName,
+            photoURL: finalAvatar,
+            phoneNumber: localProfile.phoneNumber || "GoogleUser"
+          }, { merge: true });
+        } catch (e) {
+          console.error("Erro ao registrar utilizador no Firestore:", e);
+        }
+
         showNotification(`Sessão iniciada como ${finalName}`, 'success');
       } else {
         currentUser = null;
@@ -528,7 +804,7 @@
 
     // --- CONTROLE DE FLUXOS AUTENTICAÇÃO ---
     const initAuthFlow = async () => {
-      // Regra estrita: resolver tokens antes de ativar escutas
+      // Regra estrita 3: resolver tokens antes de ativar escutas
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
@@ -546,23 +822,33 @@
 
       // Login real por Pop-up da conta Google
       btnGoogleLogin.addEventListener('click', async () => {
+        const typedPhone = loginPhoneInput.value.trim().replace(/\D/g, "");
+        if (!typedPhone) {
+          showNotification("Introduza o seu telemóvel antes de iniciar login com Google.", "error");
+          return;
+        }
+        localProfile.phoneNumber = typedPhone;
+
         const provider = new GoogleAuthProvider();
         try {
           await signInWithPopup(auth, provider);
         } catch (err) {
           console.error("Erro Google Auth:", err);
-          showNotification("A autenticação Google falhou. Verifique as credenciais na consola.", "error");
+          showNotification("A autenticação Google falhou. Verifique as credenciais no painel.", "error");
         }
       });
 
       // Login Anónimo Rápido utilizando Perfil Customizado local
       btnAnonLogin.addEventListener('click', async () => {
         const typedName = loginDisplayNameInput.value.trim();
-        if (!typedName) {
-          showNotification("Por favor, introduza um Nome ou Apelido para continuar.", "error");
+        const typedPhone = loginPhoneInput.value.trim().replace(/\D/g, "");
+        
+        if (!typedName || !typedPhone) {
+          showNotification("Por favor, preencha todos os campos para continuar.", "error");
           return;
         }
         localProfile.displayName = typedName;
+        localProfile.phoneNumber = typedPhone;
 
         try {
           await signInAnonymously(auth);
@@ -582,15 +868,37 @@
       });
     };
 
-    // --- ESCUTA SÍNCRONA EM TEMPO REAL (SEM EXIGIR ÍNDICES ADICIONAIS) ---
+    // --- ESCUTA SÍNCRONA EM TEMPO REAL ---
     let unsubscribeFirestore = null;
+    let unsubscribeUsers = null;
+    let unsubscribeChats = null;
+
     const setupFirestoreRealtimeListener = (user) => {
-      if (unsubscribeFirestore) unsubscribeFirestore();
-      if (!user) return;
+      if (!user) return; // REGRA ESTRITA 3 Guardrail
 
+      // REGRA ESTRITA 1 & 2: Sincronização dos utilizadores para busca local (sem complex queries)
+      const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+      unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+        const uList = [];
+        snapshot.forEach((doc) => {
+          uList.push(doc.data());
+        });
+        registeredUsers = uList;
+      }, (error) => console.error("Erro de utilizadores:", error));
+
+      // Sincronização de Chats (Regra 1)
+      const chatsRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
+      unsubscribeChats = onSnapshot(chatsRef, (snapshot) => {
+        const cList = [];
+        snapshot.forEach((doc) => {
+          cList.push(doc.data());
+        });
+        chatsList = cList;
+        renderChatsList();
+      }, (error) => console.error("Erro ao sincronizar chats:", error));
+
+      // Sincronização de Mensagens (Regra 1 e 2)
       const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
-
-      // Coleta da coleção completa com ordenação cronológica executada localmente em memória
       unsubscribeFirestore = onSnapshot(messagesRef, (snapshot) => {
         const incomingMessages = [];
         snapshot.forEach((doc) => {
@@ -600,14 +908,15 @@
           });
         });
 
-        // Ordenação segura por timestamp de forma ascendente
+        // Ordenação por timestamp de forma ascendente
         incomingMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         
         messagesList = incomingMessages;
         renderMessages(messagesList);
+        renderChatsList();
       }, (error) => {
-        console.error("Erro no Firestore Snapshot:", error);
-        showNotification("Erro ao ler dados. Verifique as permissões de acesso do banco de dados.", "error");
+        console.error("Erro no Firestore Snapshot de mensagens:", error);
+        showNotification("Erro ao ler dados da base de dados.", "error");
       });
     };
 
