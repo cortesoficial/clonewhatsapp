@@ -829,7 +829,7 @@
           setupFirestoreRealtimeListener(userCredential.user);
         } catch (err) {
           console.error("Erro no login seguro por número de telefone:", err);
-          showNotification("Não foi possível estabelecer uma ligação segura com o Firebase.", "error");
+          showNotification("Falha na ligação. Certifique-se de que o 'Início de sessão anónimo' (Anonymous Auth) está ATIVO no Firebase Console.", "error");
         }
       });
 
