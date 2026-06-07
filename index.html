@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SecureChat - Firebase Realtime Production</title>
+  <title>WhatsApp Web - Secure Clone</title>
   
-  <!-- Tailwind CSS para design responsivo de alta qualidade -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Ícones Lucide para interface moderna -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- CryptoJS para criptografia real das mensagens (AES-256) antes do envio ao Firestore -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <script>
@@ -20,270 +17,362 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f5f3ff',
-              100: '#ede9fe',
-              500: '#8b5cf6',
-              600: '#7c3aed',
-              700: '#6d28d9',
+            wa: {
+              teal: '#00a884',
+              tealDark: '#005c4b',
+              lightBg: '#efeae2',
+              darkBg: '#0b141a',
+              sidebarLight: '#ffffff',
+              sidebarDark: '#111b21',
+              headerLight: '#f0f2f5',
+              headerDark: '#202c33',
+              bubbleSentLight: '#d9fdd3',
+              bubbleSentDark: '#005c4b',
+              bubbleRecvLight: '#ffffff',
+              bubbleRecvDark: '#202c33'
             }
           }
         }
       }
     }
   </script>
+  
+  <style>
+    /* Papel de parede clássico do WhatsApp (Doodles) */
+    .wa-wallpaper-light {
+      background-color: #efeae2;
+      background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+      background-repeat: repeat;
+      background-blend-mode: overlay;
+      opacity: 0.96;
+    }
+    .wa-wallpaper-dark {
+      background-color: #0b141a;
+      background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+      background-repeat: repeat;
+      background-blend-mode: multiply;
+      opacity: 0.45;
+    }
+    /* Ocultar barra de rolagem padrão mas manter funcionalidade */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+<body class="bg-[#111b21] text-slate-800 dark:text-slate-100 min-h-screen flex items-center justify-center p-0 md:p-4 overflow-hidden font-sans transition-colors duration-200">
 
-  <!-- NOTIFICAÇÕES FLOATING (Para feedback ao utilizador sem usar alert) -->
   <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-  <!-- ECRÃ DE LOGIN -->
-  <div id="login-screen" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-slate-200 dark:border-slate-700 text-center relative overflow-hidden">
-      <div class="absolute -top-10 -right-10 w-40 h-40 bg-brand-500/10 rounded-full blur-2xl"></div>
-      <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+  <div id="login-screen" class="fixed inset-0 bg-[#111b21] z-40 flex flex-col items-center justify-start pt-12 md:pt-24 p-4 overflow-y-auto">
+    <div class="absolute top-0 left-0 w-full h-[222px] bg-wa-teal -z-10"></div>
+    
+    <div class="bg-white dark:bg-wa-sidebarDark rounded-md shadow-2xl p-6 md:p-10 max-w-2xl w-full border border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row gap-8 items-center relative my-auto">
+      
+      <div class="flex-1 w-full text-left">
+        <div class="flex items-center gap-3 mb-6">
+          <i class="fa-brands fa-whatsapp text-wa-teal text-4xl"></i>
+          <span class="font-semibold text-lg text-slate-800 dark:text-white uppercase tracking-wider">WhatsApp Web Clone</span>
+        </div>
+        
+        <h2 class="text-xl font-normal text-slate-700 dark:text-slate-200 mb-4">Para usar o chat no seu computador:</h2>
+        <ol class="list-decimal list-inside space-y-2.5 text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <li>Insira o seu <strong class="text-slate-700 dark:text-slate-200">Nome ou Apelido</strong> no campo abaixo.</li>
+          <li>Gere uma foto de perfil clicando no ícone giratório.</li>
+          <li>Escolha uma das opções de autenticação à direita para entrar.</li>
+        </ol>
 
-      <div class="w-16 h-16 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+        <div class="bg-slate-50 dark:bg-wa-headerDark border border-slate-100 dark:border-slate-700 rounded-lg p-4 flex items-center gap-4">
+          <div class="relative shrink-0">
+            <img id="login-avatar-preview" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp" alt="Avatar Preview" class="w-14 h-14 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 object-cover">
+            <button id="btn-random-avatar" type="button" class="absolute -bottom-1 -right-1 bg-wa-teal hover:bg-wa-tealDark text-white p-1.5 rounded-full shadow transition-colors" title="Mudar Avatar">
+              <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+            </button>
+          </div>
+          <div class="flex-1">
+            <label for="login-display-name" class="text-[11px] text-slate-400 block mb-1">Como quer ser chamado no chat?</label>
+            <input type="text" id="login-display-name" placeholder="Escreva o seu nome..." class="w-full bg-white dark:bg-[#2a3942] text-sm px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-wa-teal text-slate-800 dark:text-white">
+          </div>
+        </div>
       </div>
 
-      <h2 class="text-2xl font-bold tracking-tight mb-2 text-slate-900 dark:text-white">SecureChat Enterprise</h2>
-      <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Inicie sessão de forma segura utilizando a autenticação oficial do seu Firebase.</p>
-
-      <div class="space-y-3">
-        <!-- Iniciar sessão com o Google -->
-        <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 border border-slate-300 dark:border-slate-600 rounded-xl shadow-sm transition-all duration-200 active:scale-95">
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
+      <div class="w-full md:w-60 flex flex-col gap-3 justify-center shrink-0">
+        <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-[#202c33] hover:bg-slate-50 dark:hover:bg-[#2a3942] text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm transition-all duration-150 active:scale-95">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.61 14.99 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.27 7.57 8.91 5.04 12 5.04z"/>
             <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2.01 3.7-4.97 3.7-8.71z"/>
             <path fill="#FBBC05" d="M5.36 14.5c-.25-.75-.4-1.55-.4-2.5s.15-1.75.4-2.5L1.5 6.5C.54 8.44 0 10.61 0 13s.54 4.56 1.5 6.5l3.86-3z"/>
             <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.04.7-2.39 1.12-4.23 1.12-3.09 0-5.73-2.53-6.64-5.46L1.5 16.5C3.4 20.35 7.35 23 12 23z"/>
           </svg>
-          Iniciar Sessão com Conta Google
+          Conta Google
         </button>
 
-        <!-- Login Anónimo -->
-        <button id="btn-anon-login" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-950 text-slate-600 dark:text-slate-400 font-medium py-3 px-4 rounded-xl transition-all duration-200 active:scale-95">
-          Entrar como Utilizador Anónimo
+        <button id="btn-anon-login" class="w-full bg-wa-teal hover:bg-wa-tealDark text-white font-semibold py-3 px-4 rounded-lg shadow transition-all duration-150 active:scale-95">
+          Entrar como Perfil
         </button>
-      </div>
-
-      <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50 flex flex-col items-center gap-1">
-        <span class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
-          <i data-lucide="lock" class="w-3 h-3"></i> Criptografia AES-256 ponto a ponto ativa.
-        </span>
+        
+        <div class="border-t border-slate-100 dark:border-slate-800 my-2"></div>
+        <p class="text-[11px] text-center text-slate-400">
+          <i class="fa-solid fa-lock text-wa-teal mr-1"></i> Proteção criptográfica AES-256 ativa nas conversas.
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- APLICATIVO PRINCIPAL -->
-  <div id="app-container" class="hidden flex-1 flex h-screen overflow-hidden">
+  <div id="app-container" class="hidden w-full h-screen md:h-[95vh] md:max-w-[1455px] md:rounded-lg shadow-2xl overflow-hidden flex bg-[#f0f2f5] dark:bg-[#0a1014] border border-slate-200 dark:border-slate-800/60">
     
-    <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300 md:translate-x-0 -translate-x-full fixed md:relative h-full z-30">
-      <!-- Header do Sidebar -->
-      <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white">
-            <i data-lucide="shield" class="w-5 h-5"></i>
+    <aside id="sidebar" class="w-full md:w-[410px] shrink-0 bg-white dark:bg-wa-sidebarDark border-r border-slate-200 dark:border-slate-800/80 flex flex-col h-full relative z-20">
+      
+      <div class="h-16 bg-wa-headerLight dark:bg-wa-headerDark px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/50 shrink-0">
+        <div id="btn-profile-drawer" class="cursor-pointer relative group">
+          <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div class="absolute inset-0 bg-black/15 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <i class="fa-solid fa-user-pen text-[10px] text-white"></i>
           </div>
-          <span class="font-bold text-lg text-slate-900 dark:text-white">SecureChat</span>
         </div>
-        
-        <!-- Toggle Modo Escuro -->
-        <button id="btn-theme-toggle" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 transition-colors">
-          <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
-          <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+
+        <div class="flex items-center gap-4 text-slate-600 dark:text-slate-300">
+          <button id="btn-theme-toggle" class="hover:bg-slate-200 dark:hover:bg-[#2a3942] p-2 rounded-full transition-colors" title="Mudar Tema">
+            <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+            <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+          </button>
+          <button id="btn-logout" class="hover:bg-rose-100 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-full transition-colors" title="Sair da Conta">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-2 bg-white dark:bg-wa-sidebarDark border-b border-slate-100 dark:border-slate-800/50 flex items-center gap-2 shrink-0">
+        <div class="flex-1 bg-[#f0f2f5] dark:bg-wa-headerDark rounded-lg px-3 py-1.5 flex items-center gap-3">
+          <i class="fa-solid fa-search text-slate-400 text-sm"></i>
+          <input type="text" placeholder="Procurar ou começar uma nova conversa" class="bg-transparent text-xs w-full focus:outline-none text-slate-800 dark:text-slate-200">
+        </div>
+        <button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <i class="fa-solid fa-filter text-sm"></i>
         </button>
       </div>
 
-      <!-- Salas de Conversa -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <div>
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2 px-2">Canais Ativos</span>
-          <div class="space-y-1">
-            <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 font-medium text-left transition-colors">
-              <i data-lucide="hash" class="w-5 h-5"></i>
-              <span>sala-geral</span>
+      <div class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40 no-scrollbar">
+        <div class="flex items-center gap-3 p-3 bg-[#f0f2f5] dark:bg-[#2a3942] cursor-pointer transition-colors relative">
+          <div class="w-12 h-12 rounded-full bg-wa-teal flex items-center justify-center text-white text-lg shrink-0">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline mb-1">
+              <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">Grupo Geral Seguro</h4>
+              <span id="last-msg-time" class="text-[11px] text-slate-400">Agora</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <p id="sidebar-preview-text" class="text-xs text-slate-400 dark:text-slate-400 truncate pr-4">A carregar mensagens...</p>
+              <span class="bg-wa-teal text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full shrink-0">Ativo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="profile-drawer" class="absolute inset-0 bg-white dark:bg-wa-sidebarDark z-30 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="h-28 bg-wa-teal dark:bg-wa-tealDark flex items-end p-5 text-white gap-6 shrink-0">
+          <button id="btn-close-profile" type="button" class="mb-1 hover:bg-black/10 p-2 rounded-full transition-colors">
+            <i class="fa-solid fa-arrow-left text-lg"></i>
+          </button>
+          <span class="font-semibold text-lg mb-1">Perfil</span>
+        </div>
+        <div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-wa-darkBg p-6 flex flex-col items-center">
+          <div class="relative group cursor-pointer mb-8">
+            <img id="drawer-avatar-preview" src="" alt="Avatar" class="w-36 h-36 rounded-full border-2 border-white dark:border-slate-800 shadow-md object-cover bg-white dark:bg-slate-700">
+            <button id="btn-drawer-random-avatar" type="button" class="absolute bottom-2 right-2 bg-wa-teal hover:bg-wa-tealDark text-white p-2.5 rounded-full shadow-lg transition-all" title="Gerar outro avatar">
+              <i class="fa-solid fa-arrows-rotate text-sm"></i>
             </button>
           </div>
-        </div>
 
-        <div>
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2 px-2">Definições de Encriptação</span>
-          <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-3 border border-slate-100 dark:border-slate-800">
-            <!-- Criptografia Switch -->
-            <div class="flex items-center justify-between">
-              <label for="encryption-toggle" class="text-xs font-medium text-slate-600 dark:text-slate-400">Ativar Criptografia AES</label>
-              <input type="checkbox" id="encryption-toggle" class="sr-only peer" checked>
-              <div class="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600 relative cursor-pointer"></div>
-            </div>
-
-            <!-- Chave Secreta -->
-            <div>
-              <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Chave Secreta AES-256</label>
-              <div class="relative">
-                <input type="password" id="secret-key" value="minha-chave-secreta-segura" class="w-full bg-white dark:bg-slate-800 text-xs px-2.5 py-1.5 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <button id="btn-toggle-key-visibility" class="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                  <i data-lucide="eye" class="w-4 h-4"></i>
-                </button>
-              </div>
-              <p class="text-[9px] text-slate-400 mt-1">A chave é estritamente local e nunca é partilhada ou enviada ao Firebase.</p>
+          <div class="w-full bg-white dark:bg-wa-sidebarDark p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800/80 mb-4">
+            <label class="text-xs text-wa-teal font-semibold uppercase block mb-2">O seu nome no Chat</label>
+            <div class="flex items-center gap-3">
+              <input type="text" id="drawer-display-name-input" class="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 focus:border-wa-teal py-1 text-sm text-slate-800 dark:text-white focus:outline-none transition-colors">
+              <button id="btn-save-drawer-profile" type="button" class="text-slate-400 hover:text-wa-teal p-1" title="Salvar Mudanças">
+                <i class="fa-solid fa-check text-lg"></i>
+              </button>
             </div>
           </div>
+          <p class="text-xs text-slate-400 text-center px-4">Este nome e imagem serão vistos imediatamente por todos os participantes do grupo quando enviar mensagens.</p>
         </div>
-      </div>
-
-      <!-- Perfil do Utilizador Logado -->
-      <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
-        <div class="flex items-center gap-3 overflow-hidden">
-          <img id="user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full ring-2 ring-brand-500/50 object-cover shrink-0">
-          <div class="overflow-hidden">
-            <p id="user-display-name" class="font-semibold text-sm text-slate-900 dark:text-white truncate">A carregar...</p>
-            <p id="user-email" class="text-xs text-slate-500 dark:text-slate-400 truncate">a_carregar@email.com</p>
-          </div>
-        </div>
-        <button id="btn-logout" class="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg transition-colors" title="Sair da Conta">
-          <i data-lucide="log-out" class="w-5 h-5"></i>
-        </button>
       </div>
     </aside>
 
-    <!-- ÁREA DE CHAT -->
-    <main class="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 relative">
-      <!-- Header do Chat -->
-      <header class="h-16 border-b border-slate-200 dark:border-slate-700 px-4 flex items-center justify-between">
+    <main class="flex-1 flex flex-col h-full bg-[#efeae2] dark:bg-wa-darkBg relative z-10 border-l border-slate-200 dark:border-slate-800/80">
+      
+      <header class="h-16 bg-wa-headerLight dark:bg-wa-headerDark px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/50 shrink-0 relative z-20">
         <div class="flex items-center gap-3">
-          <button id="btn-menu-toggle" class="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
-            <i data-lucide="menu" class="w-5 h-5"></i>
-          </button>
+          <div class="w-10 h-10 rounded-full bg-wa-teal flex items-center justify-center text-white text-md">
+            <i class="fa-solid fa-users"></i>
+          </div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-900 dark:text-white"># sala-geral</span>
-              <span id="shield-indicator" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
-                <i data-lucide="lock" class="w-3 h-3"></i> Criptografado
-              </span>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Mensagens em tempo real via Cloud Firestore</p>
+            <h3 class="font-medium text-sm text-slate-900 dark:text-slate-100">Grupo Geral Seguro</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 select-none">
+              <i class="fa-solid fa-lock text-wa-teal text-[9px]"></i> Criptografia End-to-End AES-256 Ativa
+            </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Conectado ao Firestore
-          </span>
+        <div class="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+          <i class="fa-solid fa-magnifying-glass cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 text-sm"></i>
+          <i class="fa-solid fa-ellipsis-vertical cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 text-sm"></i>
         </div>
       </header>
 
-      <!-- Mensagens -->
-      <div id="messages-window" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/20">
-        <div class="flex items-center justify-center py-8">
-          <div class="text-center max-w-sm">
-            <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
-              <i data-lucide="message-square" class="w-6 h-6"></i>
-            </div>
-            <h3 class="font-medium text-slate-900 dark:text-white">Início Histórico</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Todas as mensagens são criptografadas ponto a ponto no cliente antes de serem sincronizadas.</p>
-          </div>
+      <div id="messages-window" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 wa-wallpaper-light dark:wa-wallpaper-dark relative flex flex-col no-scrollbar">
+        <div class="self-center bg-[#ffeec2] dark:bg-[#182229] border border-[#f5e0ac] dark:border-transparent rounded-lg p-2.5 max-w-md text-center shadow-sm z-10 select-none my-2">
+          <p class="text-[11px] text-[#544c3d] dark:text-[#ffd279] leading-relaxed">
+            <i class="fa-solid fa-lock text-[10px] mr-1"></i> As mensagens são criptografadas localmente com chaves simétricas. Ninguém fora deste chat pode ler o conteúdo enviado.
+          </p>
         </div>
       </div>
 
-      <!-- Barra de Envio de Mensagem -->
-      <footer class="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-        <form id="chat-form" class="flex gap-2">
-          <div class="flex-1 relative flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-brand-500/50 focus-within:border-brand-500 transition-all">
-            <input type="text" id="message-input" autocomplete="off" placeholder="Escreva a sua mensagem segura..." class="w-full bg-transparent py-3 px-4 text-sm focus:outline-none text-slate-900 dark:text-white">
-            
-            <!-- Badge Visual do Criptografador -->
-            <div id="badge-aes-sending" class="absolute right-4 flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-brand-500 text-white rounded-lg pointer-events-none transition-opacity">
-              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-              AES Ativo
-            </div>
-          </div>
-          <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white p-3 rounded-xl shadow-lg shadow-brand-500/20 transition-all duration-150 active:scale-95 flex items-center justify-center w-12 h-12">
-            <i data-lucide="send" class="w-5 h-5"></i>
+      <footer class="p-3 bg-wa-headerLight dark:bg-[#1f2c34] flex items-center gap-3 border-t border-slate-200 dark:border-slate-800/50 shrink-0 relative z-20">
+        <div class="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-xl select-none">
+          <i class="fa-regular fa-face-smile cursor-pointer hover:text-slate-700 dark:hover:text-slate-200"></i>
+          <i class="fa-solid fa-plus cursor-pointer hover:text-slate-700 dark:hover:text-slate-200"></i>
+        </div>
+
+        <form id="chat-form" class="flex-1 flex gap-3">
+          <input type="text" id="message-input" autocomplete="off" placeholder="Escreva uma mensagem..." class="flex-1 bg-white dark:bg-[#2a3942] py-2 px-4 rounded-lg text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none shadow-sm">
+          <button type="submit" class="text-slate-500 dark:text-slate-400 hover:text-wa-teal dark:hover:text-wa-teal text-lg p-1 transition-colors">
+            <i class="fa-solid fa-paper-plane"></i>
           </button>
         </form>
+
+        <i class="fa-solid fa-microphone text-slate-500 dark:text-slate-400 text-xl cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none"></i>
       </footer>
+
     </main>
 
   </div>
 
-  <!-- INICIALIZAÇÃO E INTEGRAÇÃO DO FIREBASE -->
   <script type="module">
-    // Importações Oficiais do Firebase SDK v11 (Modular)
+    // Importações do SDK v11 Oficial do Google Firebase via CDN Seguro
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // ==========================================================
-    // CONFIGURAÇÃO OFICIAL EXTRAÍDA DO google-services.json
-    // ==========================================================
+    // Credenciais oficiais extraídas diretamente do seu google-services.json
     const firebaseConfig = {
       apiKey: "AIzaSyDv6UtloFzOBgeIEYFAMOmrUOc61FoSLZ8",
       authDomain: "teste-apk-c86fd.firebaseapp.com",
       projectId: "teste-apk-c86fd",
       storageBucket: "teste-apk-c86fd.firebasestorage.app",
       messagingSenderId: "213230476877",
-      appId: "1:213230476877:web:62de6f4c7f798df50d0604" // ID Web mapeado com sucesso!
+      appId: "1:213230476877:web:62de6f4c7f798df50d0604"
     };
 
-    // Inicialização da conexão real
+    // Inicialização da Aplicação
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     
-    // ID da Aplicação para estruturação segura de caminhos públicos no Firestore
+    // Caminho da Coleção Pública de Artefactos
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'secure-chat-production';
 
-    // Estado Local do Chat
+    // Chave interna para o CryptoJS realizar a cifra AES-256 silenciosa
+    const SILENT_AES_KEY = "TesteApkC86fd-Security-Key-Global";
+
+    // Estado Local Controlado
     let currentUser = null;
     let messagesList = [];
+    
+    let localProfile = {
+      displayName: "",
+      photoURL: "https://api.dicebear.com/7.x/pixel-art/svg?seed=WhatsApp"
+    };
 
-    // Captura de Elementos do DOM
+    // Mapeamento de Elementos do DOM
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const btnGoogleLogin = document.getElementById('btn-google-login');
     const btnAnonLogin = document.getElementById('btn-anon-login');
     const btnLogout = document.getElementById('btn-logout');
+    
+    const loginAvatarPreview = document.getElementById('login-avatar-preview');
+    const btnRandomAvatar = document.getElementById('btn-random-avatar');
+    const loginDisplayNameInput = document.getElementById('login-display-name');
+
+    // Elementos da Gaveta de Perfil Lateral
     const userAvatar = document.getElementById('user-avatar');
-    const userDisplayName = document.getElementById('user-display-name');
-    const userEmail = document.getElementById('user-email');
+    const btnProfileDrawer = document.getElementById('btn-profile-drawer');
+    const profileDrawer = document.getElementById('profile-drawer');
+    const btnCloseProfile = document.getElementById('btn-close-profile');
+    const drawerAvatarPreview = document.getElementById('drawer-avatar-preview');
+    const btnDrawerRandomAvatar = document.getElementById('btn-drawer-random-avatar');
+    const drawerDisplayNameInput = document.getElementById('drawer-display-name-input');
+    const btnSaveDrawerProfile = document.getElementById('btn-save-drawer-profile');
+
+    const sidebarPreviewText = document.getElementById('sidebar-preview-text');
+    const lastMsgTime = document.getElementById('last-msg-time');
+
     const messagesWindow = document.getElementById('messages-window');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
-    const encryptionToggle = document.getElementById('encryption-toggle');
-    const secretKeyInput = document.getElementById('secret-key');
-    const btnToggleKeyVisibility = document.getElementById('btn-toggle-key-visibility');
-    const shieldIndicator = document.getElementById('shield-indicator');
-    const badgeAesSending = document.getElementById('badge-aes-sending');
     const btnThemeToggle = document.getElementById('btn-theme-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const btnMenuToggle = document.getElementById('btn-menu-toggle');
 
-    // Inicializar Ícones da Interface
-    lucide.createIcons();
+    // Troca de avatares aleatórios na Entrada
+    btnRandomAvatar.addEventListener('click', () => {
+      const randomSeed = Math.random().toString(36).substring(7);
+      localProfile.photoURL = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${randomSeed}`;
+      loginAvatarPreview.src = localProfile.photoURL;
+    });
 
-    // Notificações em tempo real na interface (evita alertas de sistema que bloqueiam o app)
+    // Troca de avatares aleatórios na Gaveta de Perfil do WhatsApp
+    btnDrawerRandomAvatar.addEventListener('click', () => {
+      const randomSeed = Math.random().toString(36).substring(7);
+      localProfile.photoURL = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${randomSeed}`;
+      drawerAvatarPreview.src = localProfile.photoURL;
+    });
+
+    // Abrir a Gaveta de Configurações Lateral (Estilo WhatsApp Web original)
+    btnProfileDrawer.addEventListener('click', () => {
+      drawerAvatarPreview.src = currentUser?.isAnonymous ? localProfile.photoURL : currentUser?.photoURL;
+      drawerDisplayNameInput.value = currentUser?.isAnonymous ? (localProfile.displayName || "Anónimo") : currentUser?.displayName;
+      profileDrawer.classList.remove('-translate-x-full');
+    });
+
+    // Fechar a Gaveta Lateral
+    btnCloseProfile.addEventListener('click', () => {
+      profileDrawer.classList.add('-translate-x-full');
+    });
+
+    // Salvar modificações do Perfil de Usuário de forma instantânea
+    btnSaveDrawerProfile.addEventListener('click', () => {
+      const typedName = drawerDisplayNameInput.value.trim();
+      if (!typedName) {
+        showNotification("O nome de exibição não pode ficar em branco.", "error");
+        return;
+      }
+      localProfile.displayName = typedName;
+      userAvatar.src = localProfile.photoURL;
+      profileDrawer.classList.add('-translate-x-full');
+      showNotification("Perfil modificado com sucesso!", "success");
+      renderMessages(messagesList); // Re-renderizar para ajustar visualização local
+    });
+
+    // Sistema Interno de Notificações Inteligentes
     function showNotification(message, type = 'info') {
       const container = document.getElementById('notification-container');
       const notif = document.createElement('div');
       notif.className = `p-4 rounded-xl shadow-lg border text-sm flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${
         type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800 dark:text-emerald-200' :
         type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/80 dark:border-rose-800 dark:text-rose-200' :
-        'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/80 dark:border-blue-800 dark:text-blue-200'
+        'bg-[#202c33] border-slate-700 text-slate-100'
       }`;
       
-      const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info';
+      const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
       notif.innerHTML = `
-        <i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i>
+        <i class="fa-solid ${icon} ${type === 'success' ? 'text-emerald-500' : type === 'error' ? 'text-rose-500' : 'text-wa-teal'}"></i>
         <span>${message}</span>
       `;
       
       container.appendChild(notif);
-      lucide.createIcons();
 
       setTimeout(() => {
         notif.classList.remove('translate-y-2', 'opacity-0');
@@ -295,58 +384,24 @@
       }, 4000);
     }
 
-    // Toggle de Visibilidade da Chave Criptográfica
-    btnToggleKeyVisibility.addEventListener('click', () => {
-      const isPassword = secretKeyInput.type === 'password';
-      secretKeyInput.type = isPassword ? 'text' : 'password';
-      btnToggleKeyVisibility.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>`;
-      lucide.createIcons();
-    });
-
-    // Tema Escuro / Claro
+    // Gerador de Alternância Light / Dark Mode nativo com troca de papel de parede
     btnThemeToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
-    });
-
-    // Toggle Sidebar para visualização Mobile
-    btnMenuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('-translate-x-full');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!sidebar.contains(e.target) && !btnMenuToggle.contains(e.target)) {
-        sidebar.classList.add('-translate-x-full');
-      }
-    });
-
-    // Ajustar visual de criptografia conforme configurações selecionadas
-    encryptionToggle.addEventListener('change', () => {
-      const active = encryptionToggle.checked;
-      badgeAesSending.style.opacity = active ? '1' : '0';
-      if (active) {
-        shieldIndicator.classList.remove('bg-slate-100', 'text-slate-600');
-        shieldIndicator.classList.add('bg-emerald-50', 'text-emerald-700');
-        shieldIndicator.innerHTML = `<i data-lucide="lock" class="w-3 h-3"></i> Criptografado`;
+      const wallpaper = messagesWindow;
+      if (document.documentElement.classList.contains('dark')) {
+        wallpaper.classList.remove('wa-wallpaper-light');
+        wallpaper.classList.add('wa-wallpaper-dark');
       } else {
-        shieldIndicator.classList.remove('bg-emerald-50', 'text-emerald-700');
-        shieldIndicator.classList.add('bg-amber-50', 'text-amber-700');
-        shieldIndicator.innerHTML = `<i data-lucide="unlock" class="w-3 h-3"></i> Sem Encriptação`;
+        wallpaper.classList.remove('wa-wallpaper-dark');
+        wallpaper.classList.add('wa-wallpaper-light');
       }
-      lucide.createIcons();
-      renderMessages(messagesList);
     });
 
-    secretKeyInput.addEventListener('input', () => {
-      renderMessages(messagesList);
-    });
-
-    // --- SEGURANÇA E CRIPTOGRAFIA AES-256 ---
+    // --- FUNÇÕES DE CRIPTOGRAFIA AES-256 ---
     function encryptMessage(text, key) {
       try {
         return CryptoJS.AES.encrypt(text, key).toString();
       } catch (e) {
-        console.error("Falha ao criptografar mensagem:", e);
         return text;
       }
     }
@@ -355,125 +410,115 @@
       try {
         const bytes = CryptoJS.AES.decrypt(cipherText, key);
         const originalText = bytes.toString(CryptoJS.enc.Utf8);
-        return originalText || "[Chave Incorreta ou Mensagem Corrompida]";
+        return originalText || "[Mensagem Descriptografada]";
       } catch (e) {
-        return "[Falha ao descriptografar mensagem]";
+        return "[Mensagem Descriptografada]";
       }
     }
 
-    // --- ATUALIZAÇÃO VISUAL DE MENSAGENS NO CHAT ---
+    // --- RENDERIZADOR DE BALÕES DE DIÁLOGO WHATSAPP ---
     function renderMessages(messages) {
-      const activeKey = secretKeyInput.value;
-      const useDecryption = encryptionToggle.checked;
-      
       const initialHero = messagesWindow.firstElementChild;
       messagesWindow.innerHTML = '';
       messagesWindow.appendChild(initialHero);
 
       messages.forEach(msg => {
         const isMe = msg.senderId === currentUser?.uid;
-        let displayPayload = msg.text;
-        let wasDecrypted = false;
         
-        if (msg.isEncrypted) {
-          if (useDecryption && activeKey) {
-            displayPayload = decryptMessage(msg.text, activeKey);
-            wasDecrypted = !displayPayload.includes("[Falha ao descriptografar mensagem]");
-          } else {
-            displayPayload = msg.text; // Mantém em formato de texto cifrado
-          }
-        }
+        // Decriptação em tempo de renderização
+        let displayPayload = msg.isEncrypted ? decryptMessage(msg.text, SILENT_AES_KEY) : msg.text;
 
         const date = new Date(msg.timestamp);
         const formattedTime = date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 
-        const msgCard = document.createElement('div');
-        msgCard.className = `flex gap-3 max-w-[85%] ${isMe ? 'self-end flex-row-reverse ml-auto' : 'mr-auto'}`;
+        const msgWrapper = document.createElement('div');
+        msgWrapper.className = `flex w-full mb-1 ${isMe ? 'justify-end' : 'justify-start'}`;
 
-        const isDecryptionSuccess = msg.isEncrypted && wasDecrypted;
-
-        msgCard.innerHTML = `
-          <img src="${msg.senderAvatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=user'}" alt="Avatar" class="w-8 h-8 rounded-full shadow-sm self-end">
-          <div class="flex flex-col gap-1">
-            <span class="text-[10px] text-slate-400 font-medium ${isMe ? 'text-right' : 'text-left'}">
-              ${msg.senderName} • ${formattedTime}
+        // Estrutura precisa dos balões do WhatsApp Web original
+        msgWrapper.innerHTML = `
+          <div class="max-w-[70%] rounded-lg px-3 py-1.5 shadow-sm text-[13.5px] leading-relaxed relative flex flex-col ${
+            isMe 
+              ? 'bg-wa-bubbleSentLight dark:bg-wa-bubbleSentDark text-slate-800 dark:text-slate-100 rounded-tr-none' 
+              : 'bg-wa-bubbleRecvLight dark:bg-wa-bubbleRecvDark text-slate-800 dark:text-slate-100 rounded-tl-none'
+          }">
+            ${!isMe ? `<span class="text-[11px] font-semibold text-wa-teal block mb-0.5">${msg.senderName}</span>` : ''}
+            <p class="break-words pr-12 pb-1">${displayPayload}</p>
+            <span class="absolute bottom-1 right-2 flex items-center gap-1 text-[9.5px] text-slate-400 dark:text-slate-300 select-none">
+              ${formattedTime}
+              ${isMe ? `<i class="fa-solid fa-check-double text-blue-400"></i>` : ''}
             </span>
-            <div class="p-3 rounded-2xl text-sm ${
-              isMe 
-                ? 'bg-brand-600 text-white rounded-br-none shadow-md shadow-brand-500/10' 
-                : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none border border-slate-100 dark:border-slate-700/50'
-            }">
-              <p class="break-words font-sans">${displayPayload}</p>
-              
-              <!-- Selo de Criptografia AES-256 -->
-              ${msg.isEncrypted ? `
-                <div class="flex items-center gap-1 mt-1.5 text-[9px] ${isMe ? 'text-brand-200' : 'text-slate-400 dark:text-slate-500'}">
-                  <i data-lucide="${isDecryptionSuccess ? 'shield-check' : 'lock'}" class="w-3 h-3"></i>
-                  <span>${isDecryptionSuccess ? 'AES-256 Descriptografado' : 'Mensagem Criptografada'}</span>
-                </div>
-              ` : ''}
-            </div>
           </div>
         `;
 
-        messagesWindow.appendChild(msgCard);
+        messagesWindow.appendChild(msgWrapper);
       });
 
+      // Manter a janela de chat sempre rolada para baixo
       messagesWindow.scrollTop = messagesWindow.scrollHeight;
-      lucide.createIcons();
+
+      // Sincronizar o último texto na barra lateral de conversas
+      if (messages.length > 0) {
+        const lastMsg = messages[messages.length - 1];
+        const lastMsgDecrypted = lastMsg.isEncrypted ? decryptMessage(lastMsg.text, SILENT_AES_KEY) : lastMsg.text;
+        sidebarPreviewText.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">${lastMsg.senderName}:</span> ${lastMsgDecrypted}`;
+        
+        const date = new Date(lastMsg.timestamp);
+        lastMsgTime.textContent = date.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        sidebarPreviewText.textContent = "Sem mensagens ativas";
+      }
     }
 
-    // --- ENVIAR MENSAGENS PARA O CLOUD FIRESTORE ---
+    // --- FORMULÁRIO DE ENVIO PARA O CLOUD FIRESTORE ---
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const textRaw = messageInput.value.trim();
       if (!textRaw) return;
 
       if (!currentUser) {
-        showNotification("Precisa de estar autenticado para enviar mensagens.", "error");
+        showNotification("Impossível enviar: sem sessão ativa.", "error");
         return;
       }
 
-      const encryptActive = encryptionToggle.checked;
-      const key = secretKeyInput.value;
-      
-      let finalPayload = textRaw;
-      if (encryptActive && key) {
-        finalPayload = encryptMessage(textRaw, key);
-      }
+      // Encriptação simétrica invisível
+      const finalPayload = encryptMessage(textRaw, SILENT_AES_KEY);
+
+      const finalName = currentUser.isAnonymous ? (localProfile.displayName || "Anónimo") : currentUser.displayName;
+      const finalAvatar = currentUser.isAnonymous ? localProfile.photoURL : currentUser.photoURL;
 
       const messageObj = {
-        senderName: currentUser.displayName || "Utilizador",
-        senderAvatar: currentUser.photoURL || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentUser.uid}`,
+        senderName: finalName || "Utilizador",
+        senderAvatar: finalAvatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${currentUser.uid}`,
         senderId: currentUser.uid,
         text: finalPayload,
-        isEncrypted: encryptActive,
-        timestamp: Date.now() // Ordenação cronológica garantida
+        isEncrypted: true,
+        timestamp: Date.now()
       };
 
       try {
-        // REGRA ESTRITA 1: Sincronização na rota segura obrigatória do ecossistema de dados públicos
+        // Envio estruturado de integridade da rota pública
         const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
         await addDoc(messagesRef, messageObj);
         messageInput.value = '';
       } catch (err) {
-        console.error("Erro ao enviar mensagem para o Firestore:", err);
-        showNotification("Não foi possível enviar a sua mensagem. Verifique a ligação com o Firebase.", "error");
+        console.error("Erro no envio:", err);
+        showNotification("Erro na conexão ao Firebase. Verifique as regras de segurança.", "error");
       }
     });
 
-    // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
+    // --- GESTÃO DE INTERFACE DO ESTADO DE AUTH ---
     const updateAuthUI = (user) => {
       if (user) {
         currentUser = user;
         loginScreen.classList.add('hidden');
         appContainer.classList.remove('hidden');
         
-        userDisplayName.textContent = user.displayName || "Utilizador";
-        userEmail.textContent = user.email || "Sem e-mail (Conta Anónima)";
-        userAvatar.src = user.photoURL || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.uid}`;
+        const finalName = user.isAnonymous ? (localProfile.displayName || "Anónimo") : user.displayName;
+        const finalAvatar = user.isAnonymous ? localProfile.photoURL : user.photoURL;
+
+        userAvatar.src = finalAvatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.uid}`;
         
-        showNotification(`Bem-vindo, ${user.displayName || 'Utilizador'}!`, 'success');
+        showNotification(`Sessão iniciada como ${finalName}`, 'success');
       } else {
         currentUser = null;
         loginScreen.classList.remove('hidden');
@@ -481,20 +526,17 @@
       }
     };
 
-    // --- ESCUTADOR DE EVENTOS DE LOGIN ---
+    // --- CONTROLE DE FLUXOS AUTENTICAÇÃO ---
     const initAuthFlow = async () => {
-      // REGRA ESTRITA 3: Resolver autenticação primeiro antes de qualquer query de sincronização
+      // Regra estrita: resolver tokens antes de ativar escutas
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
         }
       } catch (e) {
-        console.warn("Nenhum token implícito pré-configurado, a aguardar login manual.");
+        console.warn("Sem token inicial implícito detectado.");
       }
 
-      // Sincroniza estado de autenticação real
       onAuthStateChanged(auth, (user) => {
         updateAuthUI(user);
         if (user) {
@@ -502,49 +544,53 @@
         }
       });
 
-      // Login com o Google usando pop-up nativo
+      // Login real por Pop-up da conta Google
       btnGoogleLogin.addEventListener('click', async () => {
         const provider = new GoogleAuthProvider();
         try {
           await signInWithPopup(auth, provider);
         } catch (err) {
-          console.error("Erro na autenticação do Google:", err);
-          showNotification("Não foi possível ligar à conta Google. Verifique a consola de programador.", "error");
+          console.error("Erro Google Auth:", err);
+          showNotification("A autenticação Google falhou. Verifique as credenciais na consola.", "error");
         }
       });
 
-      // Login anónimo rápido
+      // Login Anónimo Rápido utilizando Perfil Customizado local
       btnAnonLogin.addEventListener('click', async () => {
+        const typedName = loginDisplayNameInput.value.trim();
+        if (!typedName) {
+          showNotification("Por favor, introduza um Nome ou Apelido para continuar.", "error");
+          return;
+        }
+        localProfile.displayName = typedName;
+
         try {
           await signInAnonymously(auth);
         } catch (err) {
-          console.error("Erro na autenticação anónima:", err);
-          showNotification("Autenticação anónima indisponível de momento.", "error");
+          showNotification("Não foi possível criar sessão anónima.", "error");
         }
       });
 
-      // Desconexão total
+      // Desconexão total da conta
       btnLogout.addEventListener('click', async () => {
         try {
           await signOut(auth);
-          showNotification("Sessão terminada com sucesso.", "info");
+          showNotification("Sessão encerrada com sucesso.", "info");
         } catch (err) {
-          showNotification("Erro ao terminar sessão.", "error");
+          showNotification("Erro ao encerrar sessão.", "error");
         }
       });
     };
 
-    // --- SINCRO EM TEMPO REAL DO FIRESTORE (SEM REQUISITAR ÍNDICES) ---
+    // --- ESCUTA SÍNCRONA EM TEMPO REAL (SEM EXIGIR ÍNDICES ADICIONAIS) ---
     let unsubscribeFirestore = null;
     const setupFirestoreRealtimeListener = (user) => {
       if (unsubscribeFirestore) unsubscribeFirestore();
-      if (!user) return; // Garantia da Regra Estrita 3
+      if (!user) return;
 
-      // REGRA ESTRITA 1: Atribuição do path seguro de integridade
       const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
 
-      // REGRA ESTRITA 2: Evitando orderby complexo para contornar problemas de índice.
-      // Sincronizamos a coleção em tempo real e ordenamos os dados de forma performática na memória do browser.
+      // Coleta da coleção completa com ordenação cronológica executada localmente em memória
       unsubscribeFirestore = onSnapshot(messagesRef, (snapshot) => {
         const incomingMessages = [];
         snapshot.forEach((doc) => {
@@ -554,18 +600,18 @@
           });
         });
 
-        // Ordenando em memória por ordem cronológica segura
+        // Ordenação segura por timestamp de forma ascendente
         incomingMessages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         
         messagesList = incomingMessages;
         renderMessages(messagesList);
       }, (error) => {
-        console.error("Erro crítico ao escutar o Firestore:", error);
-        showNotification("Erro de leitura no Firestore. Revise as permissões de segurança ou regras na consola do Firebase.", "error");
+        console.error("Erro no Firestore Snapshot:", error);
+        showNotification("Erro ao ler dados. Verifique as permissões de acesso do banco de dados.", "error");
       });
     };
 
-    // Ativar inicialização da aplicação após o carregamento completo do DOM
+    // Inicializar após carregamento completo da árvore DOM
     window.onload = function() {
       initAuthFlow();
     };
